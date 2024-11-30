@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grid Logic</title>
+  <style>
+    img {
+      pointer-events: none;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      /* Horizontally center */
+      align-items: center;
+      /* Vertically center */
+      min-height: 100vh;
+      /* Full viewport height */
+      margin: 0;
+      background-color: black;
+    }
+
+    #gameGrid {
+      display: grid;
+      grid-template-columns: repeat(7, 60px);
+      grid-template-rows: repeat(5, 60px);
+      gap: 3px;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      background-color: #eee;
+
+    }
+
+    .restricted-left {
+      background-color: #aaa;
+      /* Light gray for white's restricted zone */
+    }
+
+    .restricted-right {
+      background-color: #222;
+      /* Dark gray for black's restricted zone */
+    }
+
+    .white-square {
+      background-color: #f0f0f0;
+    }
+
+    .black-square {
+      background-color: #404040;
+    }
+  </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+  <div id="gameGrid"></div>
+  <script>
+    let isMovingPiece = false;
+    let pieceToMove;
+    const gridDisplay = document.getElementById("gameGrid");
+
+
+    function gridUpdate() {
+      console.log("UPDATE");
+      for (const child of gridDisplay.children) {
+        if (child.childElementCount == 0) {
+          if (child.id.includes("bt")) {
+            image = document.createElement("img");
+            image.src = "https://upload.wikimedia.org/wikipedia/commons/3/3b/Chess_klt60.png";
+            child.appendChild(image);
+          }
+          else if (child.id.includes("bk")) {
+            image = document.createElement("img");
+            image.src = "https://upload.wikimedia.org/wikipedia/commons/4/49/Chess_qlt60.png";
+            child.appendChild(image);
+          }
+
+        }
+        else if (child.childElementCount > 0 && child.id.length < 4) {
+            console.log("BASTARD");
+            child.innerHTML = "";
+          }
+      }
+    }
+
+    // Grid size and restricted zone dimensions
+    var grid =
+      [
+        ["e", "e", "e", "e", "e", "e", "e"],
+        ["b", "b", "b", "e", "c", "c", "c"],
+        ["b", "b", "b", "e", "c", "c", "c"],
+        ["b", "b", "b", "e", "c", "c", "c"],
+        ["e", "e", "e", "e", "e", "e", "e"],
+      ]
+
+    var k = 0;
+    var t = 0;
+
+    var playerColor = "b";
+
+    console.log(grid)
+
+    //postavljanje
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 7; j++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.id = '' + i + '' + j;
+        if (grid[i][j] == "b") {
+          cell.classList.add("restricted-left");
+        }
+        else if (grid[i][j] == "c") {
+          cell.classList.add("restricted-right");
+        }
+
+        gridDisplay.appendChild(cell);
+      }
+
+    }
+
+    const cells = document.querySelectorAll('.cell');
+
+
+
+
+
+    cells.forEach(el => el.addEventListener('click', event => {
+      
+
+      if (isMovingPiece != false) {
+        console.log("POMAK")
+        if (event.target.style.border == "1px solid green" && event.target.childElementCount == 0) {
+          event.target.id += isMovingPiece+"P";
+          isMovingPiece = false;
+          piece = document.getElementById(pieceToMove);
+          piece.id = pieceToMove.slice(0,2);
+
+        }
+        else {
+          isMovingPiece = false;
+        }
+
+        for (const child of gridDisplay.children){
+          child.style.border = "none";
+        }
+      }
+
+      console.log(event.target.id.length);
+
+
+      if (event.target.id.length >=  4) {
+        console.log("tu smo");
+        isMovingPiece = "bt";
+        
+        border = [
+          [-1, -1], [0, -1], [1, -1],
+          [-1, 0], [1, 0],
+          [-1, 1], [0, 1], [1, 1],
+        ]
+
+
+        
+
+
+
+        for (i = 0; i < 8; i++) {
+          try {
+            cell = document.getElementById('' +
+              (border[i][0] + Number(event.target.id[0]) +
+                '' + (border[i][1] + Number(event.target.id[1])
+                )
+              ))
+            cell.style.border = "1px solid green";
+
+          }
+          catch { continue; }
+
+        }
+        
+        
+        pieceToMove = event.target.id;
+
+      }
+
+
+
+
+      // POČETNO POSTAVLJANJE
+      if (event.target.id.length == 2 && t < 2 && isMovingPiece == false) {
+        if (["14", "15", "16", "24", "25", "26", "34", "35", "36"].includes(event.target.id) == false) {
+          console.log(["14", "15", "16", "24", "25", "26", "34", "35", "36"].includes(event.target.id));
+          event.target.id = event.target.id + playerColor + "t"
+          console.log(event.target.id);
+          t++;
+        }
+      }
+      // 11  21  32
+      // 12  22  32
+      // 13  23  33
+
+
+      gridUpdate()
+    }));
+
+    cells.forEach(el => el.addEventListener('contextmenu', event => {
+      event.target.style = "background-color: red";
+      console.log(event.target.style.color)
+    }));
+
+    // Initialize grid and example usage
+
+
+
+
+
+  </script>
+</body>
+
+</html>
