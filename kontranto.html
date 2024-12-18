@@ -28,7 +28,11 @@
 </div>
   <button class="actionButton" id="confirmFirst" style="float:right;" disabled>🚫</button>
 
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+  <script 
+   src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
+   integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+   crossorigin="anonymous">
+  </script>
 
 
 
@@ -69,18 +73,12 @@
  //        
  // GFPKK ^
  // popraviti svg figura (nisu centrirane)
- // timer za oba igrača koji se može zaustavit i započet na neki emit od glavnog hivemind servera (kad ADVERSARY pošalje pokret da na MOM ekranu stanje NJEGOV timer)
+ // timer za oba igrača koji se može zaustavit i započet na neki emit od glavnog hivemind servera 
+ // (kad ADVERSARY pošalje pokret da na MOM ekranu stanje NJEGOV timer)
+ //
  // IZVANREDNI KORAK I DIDSS!!!
  // zapravo napravit igru
  // to je to :>                             
-
-
-
-
-                                                                                      
-                                                                                      
-
-
 
   vrijeme1 = new Date();
 
@@ -171,7 +169,8 @@
 
       socket.emit("listenIn",{"id":gameId,"isBlack":isBlack}) // ovo tu služi za kad je drugi gotov, izašao ili predao se
 
-      var illegalMoves = isBlack ? ["7", "8", "9", "14", "15", "16", "21", "22", "23"] : ["11", "12", "13", "18", "19", "20", "25", "26", "27"];
+      var illegalMoves = isBlack ? ["7", "8", "9", "14", "15", "16", "21", "22", "23"] :
+                                   ["11", "12", "13", "18", "19", "20", "25", "26", "27"];
       var isFirstMove = true;
       var allowedMoves;
       var a = 0;
@@ -284,7 +283,7 @@ let initialPieces = document.getElementById("initialPieces");
     initialPieces.innerHTML= (isBlack ? K : k).repeat(2)+ (isBlack ? T : t).repeat(2);
     
 
-  
+
 
 
 for (let i = 0; i < 35; i++) {
@@ -304,36 +303,52 @@ for (let i = 0; i < 35; i++) {
       
 
     }
-      colorTakenSpaces = function(){
+      colorTakenSpaces = function(takenSpaces){
         //TODO: napravit 
       }
     submitMove = function(){
+
+     
+
+      confirmButton.disabled = true;
         //TODO: napravit
-        movesforSubmitting = []; 
-        for (var id of moves){
-          movesforSubmitting.push(Number(id[1]));
-        }
-        moves = [];
+        movesforSubmitting = moves[+isBlack];
+        console.log(movesforSubmitting);
+        
         socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting});
         socket.on("waiting",  (data) => {
         //tu ćemo djelovati kad se čeka na nama
+        //ovo ne radi i ne znam zašto
+        console.log("ALO OVAJ JE VEĆG OTOV");
       });
         socket.on("ok", (data) => {
-          
 
+           //TODO: ovdje započeti tajmere
 
-          if (data.isNewMove){
+            if (isFirstMove){
+              isFirstMove = false;
+
+              //TODO: GFPKK
+
+            }
+            
             //ako smo mi drugi poslali naše pokrete
             moves = data.moves;
+            for (i = 0; i < 34; i++){
+              document.getElementById(i.toString()).className	= "cell"
+            }
+            // for (i of data.whiteTaken){
+            //   document.getElementById(i).className = "cell white taken"
+            // }
+            // for (i of data.blackTaken){
+            //   document.getElementById(i).className = "cell black taken"
+            // }
             updateBoard();
             colorTakenSpaces(data.takenSpaces);
            
-          }
-          else{
-            //ako čekamo drugog da dovrši 
-          }
+
         });
-      }
+       }
 
     colorAllowedMoves = function(moves){
       console.log(moves);
@@ -490,7 +505,9 @@ else{
           console.log("klikitis");
           console.log(element.id);
           if (selectedElement !== undefined && computeAllowedMoves().includes(element.id)){
-            playerMoves = isBlack ? moves[1] : moves[0];
+
+            playerMoves = moves[+isBlack];
+
             if (selectedPiece == "circle") {
     // Try to place the circle in the first two available spots (index 0 or 1)
     if (playerMoves[0] === -2) {
@@ -511,8 +528,10 @@ else{
           updateBoard();
           a++;
           if (a == 4){
+            a = -Infinity
             confirmButton.innerHTML = "✅";
             confirmButton.disabled = false;
+            confirmButton.onclick = function() {submitMove()};
           }
           selectedElement.remove();
           selectedElement = undefined;
