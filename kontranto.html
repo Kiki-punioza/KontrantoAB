@@ -79,7 +79,11 @@
  // IZVANREDNI KORAK I DIDSS!!!
  // zapravo napravit igru
  // to je to :>                             
+ var isFirstMove = true;
 
+ var nameLeft;
+ var nameRight;
+  movesOfPieces = [];
   vrijeme1 = new Date();
 
   const socket = io()
@@ -121,38 +125,28 @@
 
   });
 
+    var isBlack;
+    var selectedElement;
+
+    var timerLeft = { value: 0, isRunning: false, isRight: false, intervalId: null};
+    var timerRight = { value: 0, isRunning: false, isRight: true, intervalId: null};
 
   button.addEventListener('click', () => {
-    // TODO: napravti igur
-    vrijeme2 = new Date();
-    var selectedElement;
-    socket.emit("firstMove",{"id":gameId,"move":selected,"isAdversary":isAdversary,"moveTime":Math.round(vrijeme2 - vrijeme1)})
-    
-    console.log("kliknuo njesra");
-    socket.on("recieved", (data) => {
 
-      
 
-      vrijeme2 = new Date();
-      console.log("MEČAO")
-      console.log(data.isBlack);
-      const isBlack = data.isBlack;
-      
-      var timerLeft = { value: 0, isRunning: false, isRight: false, intervalId: null};
-      var timerRight = { value: 0, isRunning: false, isRight: true, intervalId: null};
-
-      function formatTime(seconds) {
-        console.log(seconds);
+    function formatTime(seconds) {
+        //console.log(seconds);
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       //ovo je NaN
       //molim lijepo popravi
-      console.log(`${minutes}:${remainingSeconds}`);
+      //console.log(`${minutes}:${remainingSeconds}`);
 
       return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
-      function startTimer(timer) {
+
+    function startTimer(timer) {
         console.log(`startao sam timer ${timer.isRight}`);
   if (!timer.isRunning) {
     timer.isRunning = true;
@@ -172,15 +166,40 @@
 }
 
 
+
+
+    // TODO: napravti igur
+    button.disabled = true;
+    button.innerHTML = '🚫';
+    vrijeme2 = new Date();
+    var selectedId;
+    socket.emit("firstMove",{"id":gameId,"move":selected,"isAdversary":isAdversary,"moveTime":Math.round(vrijeme2 - vrijeme1)})
+    
+    console.log("kliknuo njesra");
+    socket.on("recieved", (data) => {
+      
+
+      
+
+      vrijeme2 = new Date();
+      console.log("MEČAO")
+      console.log(data.isBlack);
+      isBlack = data.isBlack;
+      
+
+
+
+
+
      // ovo tu služi za kad je drugi gotov, izašao ili predao se
 
       var illegalMoves = isBlack ? ["7", "8", "9", "14", "15", "16", "21", "22", "23"] :
                                    ["11", "12", "13", "18", "19", "20", "25", "26", "27"];
-      var isFirstMove = true;
+      
       var allowedMoves;
       var a = 0;
 
-      
+      doingSomething = false;
 
       blackPlayer = isBlack ? "{{ session['user'] }}" : data.otherPlayer;
       whitePlayer = isBlack ? data.otherPlayer : "{{ session['user'] }}";
@@ -243,7 +262,7 @@
     `
     const tT = `
     <div style="display: flex; justify-content: center; align-content: center;">
-  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
     <polygon points="19,3 35,35 3,35" stroke="black" stroke-width="3" fill="white" />
   </svg>
   <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
@@ -262,7 +281,7 @@
     
             <img class="gameProfile" src="/image/${whitePlayer}">
             <div style="display:flex;flex-direction: column;align-items: center;justify-content: center;">
-              <p style="margin: 0">${whitePlayer}</p>        
+              <p style="margin: 0" id="whitePlayer">${whitePlayer}</p>        
               <p style="margin: 0" id="false"></p>
          </div>
             
@@ -271,7 +290,7 @@
           <div>
           <div style="display:flex;">
                 <div style="display:flex;flex-direction: column;align-items: center;justify-content: center;">
-              <p style="margin: 0">${blackPlayer}</p>        
+              <p style="margin: 0" id="blackPlayer">${blackPlayer}</p>        
               <p style="margin: 0" id="true"></p>
          </div>
             <img class="gameProfile" src="/image/${blackPlayer}">
@@ -290,6 +309,113 @@
 </div>
 `;
   document.body.innerHTML = newhtml;
+ function attachListeners(){
+
+
+  document.querySelectorAll(".piece").forEach(element => {
+
+                  
+                  element.addEventListener("click", (event) => { 
+                    event.stopPropagation()
+                                        console.log("KLIKNUO SAM NA KOMAD");
+                    pieceIsBlack = element.classList.contains("black") ? true : false;
+                    if(pieceIsBlack == isBlack){
+                      console.log(`KLIKNUO SAM NA ${element.id} MOJE BOJE`);
+
+                  
+                    if (selectedElement !== undefined){
+              console.log("SELECTED VEĆ POSTOJI");
+              console.log(selectedElement.innerHTML);
+              selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>',"");
+              
+            }
+            selectedElement = element;
+            selectedPiece = element.id;
+            selectedId = element.closest(".cell").id;
+            element.innerHTML = '<rect width="76" height="76" fill="#ef9"></rect>'+element.innerHTML;
+            console.log(element.id);
+            console.log(selectedId);
+            console.log("OVO TU JE ID NAJBLIŽEG CELL ASRANJE ASAFDSADSDS");
+            console.log(element.getAttribute("index"));
+            console.log(typeof element.getAttribute("index"));
+            //coerce to number
+            
+
+              console.log(movesOfPieces[+element.getAttribute("index")]);
+              colorAllowedMoves(movesOfPieces[+element.getAttribute("index")]);
+              
+                }});
+                });
+            
+
+            document.querySelectorAll(".cell").forEach(element => {
+                element.addEventListener("click", () => {
+                 
+                  console.log("KLIKNUO SAM NA ČELL");
+                  playerMoves = moves[+isBlack];
+                  if (selectedElement !== undefined){
+                    for(i = 0; i < 35; i++){
+        document.getElementById(i.toString()).style = "";
+      }
+                  
+      let indexAttributes = {};
+
+for (let index = 0; index < 4; index++) {
+    let position = moves[+isBlack][index];
+    if (position !== -1) {
+        let parentDiv = document.getElementById(position.toString());
+        let targetSvg = parentDiv.querySelector(isBlack ? "svg.black" : "svg.white");
+        if (targetSvg) {
+            indexAttributes[position] = targetSvg.getAttribute("index");
+        }
+    }
+}
+                  if (movesOfPieces[+selectedElement.getAttribute("index")].includes(element.id)){
+                    console.log(moves[+isBlack]);
+                    let oldPosition = selectedId.toString();
+                    let newPosition = element.id;
+                    moves[+isBlack][moves[+isBlack].indexOf(oldPosition)] = newPosition;
+                    // Step 3: Update the indexAttributes with the new positions
+            if (indexAttributes[oldPosition]) {
+                indexAttributes[newPosition] = indexAttributes[oldPosition];
+                delete indexAttributes[oldPosition];
+            }
+                    console.log(moves[+isBlack]);
+
+                  }
+                  
+                    console.log(selectedElement)
+                    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                    selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>',"");
+                    selectedElement = undefined;
+                    selectedPiece = undefined;
+                  
+                   
+                    updateBoard();
+                    setTimeout(() =>{
+attachListeners();
+            }, 0);
+                    for (let index = 0; index < 4; index++) {
+    let position = moves[+isBlack][index];
+    if (position !== -1) {
+        let parentDiv = document.getElementById(position.toString());
+        let targetSvg = parentDiv.querySelector(isBlack ? "svg.black" : "svg.white");
+        if (targetSvg && indexAttributes[position]) {
+            targetSvg.setAttribute("index", indexAttributes[position]);
+        }
+    }
+}
+                    
+                    
+                  
+
+                  }
+                  
+                
+                });
+              });
+            }
+
   startTimer(timerLeft);
   startTimer(timerRight);
   var confirmButton = document.getElementById("confirmMove");
@@ -297,7 +423,42 @@
 
 const gridDisplay = document.getElementById("gameGrid");  
 let initialPieces = document.getElementById("initialPieces");
+var nameLeft = document.getElementById("whitePlayer");
+var nameRight = document.getElementById("blackPlayer");
 
+socket.on("kilaj",  (data) => {
+
+console.log("im on dat gud kuš and alkahjal");
+console.log(data.whoIsDone);
+if (data.whoIsDone){
+  stopTimer(timerRight);
+  nameRight.innerHTML = `${blackPlayer} ✅`;
+  
+}   
+else{
+  stopTimer(timerLeft);
+  nameLeft.innerHTML = `${whitePlayer} ✅`;
+}
+
+  
+
+//tu ćemo djelovati kad se čeka na nama
+//ovo ne radi i ne znam zašto
+
+//trebao sam izvaditi 
+//socket.on
+//iz submitMovea
+//i sad radi
+
+
+//zašto ne radi u submitMoveu ne znam
+//ali sad radi
+//i to je to
+// ^^^  ovo je napisao copilot 
+
+
+
+});
   
     initialPieces.innerHTML= (isBlack ? K : k).repeat(2)+ (isBlack ? T : t).repeat(2);
     socket.onAny((eventName, ...args) => {
@@ -334,36 +495,11 @@ for (let i = 0; i < 35; i++) {
         confirmButton.disabled = false;
         confirmButton.innerHTML = "✅"
       }
-      socket.on("kilaj",  (data) => {
-        console.log("im on dat gud kuš and alkahjal");
-        console.log(data.whoIsDone);
-        if (data.whoIsDone){
-          stopTimer(timerRight);
-        }   
-        else{
-          stopTimer(timerLeft);
-        }
-
-          
-
-        //tu ćemo djelovati kad se čeka na nama
-        //ovo ne radi i ne znam zašto
-
-        //trebao sam izvaditi 
-        //socket.on
-        //iz submitMovea
-        //i sad radi
-
-        
-        //zašto ne radi u submitMoveu ne znam
-        //ali sad radi
-        //i to je to
-        // ^^^  ovo je napisao copilot 
-
-
-        
-      });
+      var nameLeft = document.getElementById("whitePlayer");
+      var nameRight = document.getElementById("blackPlayer");
     submitMove = function(){
+
+      isBlack ? nameRight.innerHTML = `${blackPlayer} ✅` : nameLeft.innerHTML = `${whitePlayer} ✅`;
       stopTimer(isBlack ? timerRight : timerLeft);
      
 
@@ -379,6 +515,9 @@ for (let i = 0; i < 35; i++) {
 
       
         socket.on("ok", (data) => {
+          nameLeft.innerHTML = whitePlayer;
+          nameRight.innerHTML = blackPlayer;
+          movesOfPieces = [];
 
            //TODO: ovdje započeti tajmere
            startTimer(timerLeft);
@@ -386,45 +525,89 @@ for (let i = 0; i < 35; i++) {
 
 
             if (isFirstMove){
+              document.querySelectorAll(".cell").forEach(element => {
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+              });
+              document.querySelectorAll(".piece").forEach(element => {
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+              });
+              setTimeout(() =>{
+attachListeners();
+            }, 0);
+        
+              console.log("OVO JE PRVI POTEZ BIO");
+   
               //document.querySelectorAll()
               isFirstMove = false;
+              illegalMoves = [];
 
               //TODO: GFPKK
 
             }
             
+            
+
             //ako smo mi drugi poslali naše pokrete
             moves = data.moves;
-            for (i = 0; i < 34; i++){
-              document.getElementById(i.toString()).className	= "cell"
+
+            for (i = 0; i < 35; i++){
+              document.getElementById(i.toString()).className	= "cell";
             }
-            // for (i of data.whiteTaken){
-            //   document.getElementById(i).className = "cell white taken"
-            // }
-            // for (i of data.blackTaken){
-            //   document.getElementById(i).className = "cell black taken"
-            // }
-            updateBoard();
             for (i of data.whiteTaken){
-              document.getElementById(i).className = "cell white taken"
+              document.getElementById(i.toString()).className = "cell white taken"
+              illegalMoves.push(i);
             }
             for (i of data.blackTaken){
-              document.getElementById(i).className = "cell black taken"
+              document.getElementById(i.toString()).className = "cell black taken"
+              illegalMoves.push(i);
             }
-
+            updateBoard();
+           
+            //get index for each piec
+            console.log(moves);
+            console.log(moves[+isBlack]);
+            console.log("ASDFGHJKLSDFGHJKL");
+          
+            for (let index = 0; index < 4; index++) {
+    let position = moves[+isBlack][index];
+    if (position !== -1) {
+        console.log(`Processing piece ${index} at position ${position}`);
+        
+        movesOfPieces.push(computeAllowedMoves(position));
+        let parentDiv = document.getElementById(position.toString());
+        
+        // Debugging statements
+        console.log(`Parent div for position ${position}:`, parentDiv);
+        
+        let targetSvg = parentDiv.querySelector(isBlack ? "svg.black" : "svg.white");
+        
+        // More debugging statements
+        console.log(`Query selector used: ${isBlack ? "svg.black" : "svg.white"}`);
+        console.log(`Target SVG for position ${position}:`, targetSvg);
+        
+        if (targetSvg) {
+            targetSvg.setAttribute("index", (movesOfPieces.length - 1).toString());
+        } else {
+            console.warn(`No SVG found for position ${position} with selector ${isBlack ? "svg.black" : "svg.white"}`);
+        }
+    }
+}
+            window.movesOfPieces = movesOfPieces;
            
 
         });
        }
 
     colorAllowedMoves = function(moves){
-      console.log(moves);
-      console.log("OVO SU POKRETI");
+      for(i = 0; i < 35; i++){
+        document.getElementById(i.toString()).style = "";
+      }
+
         for (var id of moves){
           //id = id.padStart(2,"0");
-          console.log(id);
-          console.log("OVO JE ID");
-          console.log(document.getElementById(id));
+
           document.getElementById(id).style="border: 3px solid #090;";
 
         }
@@ -432,14 +615,16 @@ for (let i = 0; i < 35; i++) {
 
       computeAllowedMoves = function(position=0){
         let allowedMoves = [];
+        //convert position to number
+        position = +position;
+
+        
         if (isFirstMove){
-          console.log(illegalMoves);
-          console.log("OVO SU NEDOZVOLJENI");
+
           
           for (let i = 0; i < 35; i++){
             if (illegalMoves.includes(i.toString()) == false){
-              console.log(i);
-              console.log("OVAJ MERE");
+
               allowedMoves.push(i.toString());
               
             }
@@ -447,23 +632,30 @@ for (let i = 0; i < 35; i++) {
           
         }
         else {
-          let allowedMoves = [];
-          let transforms = 
-        [
-          -6,-5,-4,
-          -1, 0, 1,
-           4, 5, 6,
-        ]
+
+          transforms = [
+                -7,  
+                 0,  
+                 7,  
+          ]
           
-          for (let i = 0; i<9; i++){
-            newPosistion = position+transforms[i];
-            if(newPosistion > -1 && newPosistion < 35 && !document.getElementById(newPosistion.toString()).classList.contains("taken")){ // && još toga ali kasnije
-              allowedMoves.push(i.toString());
-              
-            }
+          position % 7 == 0 ? null : transforms.push(6,-1,-8); //add to transforms left edge moves
+          position % 7 == 6 ? null : transforms.push(1,-6,8) ; 
+
+          for (i = 0; i < transforms.length; i++){
+          let newPosition = +position + transforms[i];
+
+
+
+          
+          if(newPosition > -1 && newPosition < 35 && !document.getElementById(newPosition.toString()).classList.contains("taken")){ 
+            allowedMoves.push(newPosition.toString());
           }
+        }
+
 
         }
+        console.log(allowedMoves);
         return allowedMoves;
       }
 
@@ -476,6 +668,19 @@ for (let i = 0; i < 35; i++) {
 
       
       updateBoard = function(){
+        shouldEnable = true;
+        myPieces = moves[+isBlack];
+        for (i of myPieces){
+          if (i !== -1 && i !== -2){
+          if (document.getElementById(i.toString()).classList.contains("taken")){
+            console.log("SAD NEĆU ENABLEAT");
+            shouldEnable = false;
+          }}
+        
+        }
+       
+
+
         lookupTable = {
           "k": k,
           "t": t,
@@ -538,9 +743,14 @@ else{
 }
 
       for (id in result){
+        if (["kk","tt","KT","TK"].includes(result[id])) {
+          console.log("SAD NEĆU ENABLEAT ZATO ŠTO SI STAVIO SVOJA DVA NA JEDNO TE ISTO MJESTO");
+    shouldEnable = false;
+}
         console.log(`${id}: ${result[id]}`);
         document.getElementById(id.toString()).innerHTML = lookupTable[result[id]];
       }
+      shouldEnable ? enableConfirmButton() : disableConfirmButton();
     }
     
 
@@ -598,6 +808,9 @@ else{
             a = -Infinity
             enableConfirmButton();
             confirmButton.onclick = function() {submitMove()};
+          }
+          else{
+            disableConfirmButton();
           }
           selectedElement.remove();
           selectedElement = undefined;
