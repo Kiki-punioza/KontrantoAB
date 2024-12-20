@@ -142,7 +142,7 @@
       //molim lijepo popravi
       //console.log(`${minutes}:${remainingSeconds}`);
 
-      return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+      return `${String(minutes).padStart(1, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 
@@ -272,26 +272,33 @@
 </div>
     `
 
+
+
+    
+
+
+
+
       newhtml = `
       <div class="centered">
-        <div>
-
+        <div style="text-align: center;">
+<h2 id="scoreboard" style="margin-bottom: 0;">0 - 0</h2>
         <div style="display:flex;width:100%;justify-content: space-between;"> 
           <div style="display:flex;">
     
             <img class="gameProfile" src="/image/${whitePlayer}">
-            <div style="display:flex;flex-direction: column;align-items: center;justify-content: center;">
+            <div style="margin-left: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
               <p style="margin: 0" id="whitePlayer">${whitePlayer}</p>        
-              <p style="margin: 0" id="false"></p>
+              <p style="margin: 0" id="false">0:00</p>
          </div>
             
     </div>
           
           <div>
           <div style="display:flex;">
-                <div style="display:flex;flex-direction: column;align-items: center;justify-content: center;">
+                <div style="margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
               <p style="margin: 0" id="blackPlayer">${blackPlayer}</p>        
-              <p style="margin: 0" id="true"></p>
+              <p style="margin: 0" id="true">0:00</p>
          </div>
             <img class="gameProfile" src="/image/${blackPlayer}">
 
@@ -309,13 +316,26 @@
 </div>
 `;
   document.body.innerHTML = newhtml;
+  scoreboard = document.getElementById("scoreboard");
  function attachListeners(){
-
 
   document.querySelectorAll(".piece").forEach(element => {
 
                   
                   element.addEventListener("click", (event) => { 
+                    document.addEventListener("click", (event) => {
+                      if (!event.target.closest(".cell")) {
+                        if (selectedElement) {
+                          selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>', "");
+                          selectedElement = undefined;
+                          selectedPiece = undefined;
+                          clearSelections();
+                        }
+                      }
+                    });
+                    if (selectedElement && !element.classList.contains(isBlack ? "black" : "white")) {
+                      return; // Do nothing if an element is already selected or if the clicked piece is not my color
+                    }
                     event.stopPropagation()
                                         console.log("KLIKNUO SAM NA KOMAD");
                     pieceIsBlack = element.classList.contains("black") ? true : false;
@@ -350,7 +370,10 @@
 
             document.querySelectorAll(".cell").forEach(element => {
                 element.addEventListener("click", () => {
-                 
+                if (element.querySelectorAll(".piece").length >= 2) {
+                  console.log("Cannot place more than 2 pieces on a cell.");
+                  return;
+                }
                   console.log("KLIKNUO SAM NA ČELL");
                   playerMoves = moves[+isBlack];
                   if (selectedElement !== undefined){
@@ -392,6 +415,18 @@ for (let index = 0; index < 4; index++) {
                   
                    
                     updateBoard();
+                    setTimeout(() => {
+    document.querySelectorAll(".cell").forEach(element => {
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+              });
+              document.querySelectorAll(".piece").forEach(element => {
+                const newElement = element.cloneNode(true);
+                element.parentNode.replaceChild(newElement, element);
+              });
+  }, 0);
+
+
                     setTimeout(() =>{
 attachListeners();
             }, 0);
@@ -426,13 +461,13 @@ let initialPieces = document.getElementById("initialPieces");
 var nameLeft = document.getElementById("whitePlayer");
 var nameRight = document.getElementById("blackPlayer");
 
-socket.on("kilaj",  (data) => {
+socket.on("waiting",  (data) => {
 
-console.log("im on dat gud kuš and alkahjal");
+
 console.log(data.whoIsDone);
 if (data.whoIsDone){
   stopTimer(timerRight);
-  nameRight.innerHTML = `${blackPlayer} ✅`;
+  nameRight.innerHTML = `✅ ${blackPlayer}`;
   
 }   
 else{
@@ -497,9 +532,12 @@ for (let i = 0; i < 35; i++) {
       }
       var nameLeft = document.getElementById("whitePlayer");
       var nameRight = document.getElementById("blackPlayer");
+      whiteScore = 0;
+      blackScore = 0;
     submitMove = function(){
+     
 
-      isBlack ? nameRight.innerHTML = `${blackPlayer} ✅` : nameLeft.innerHTML = `${whitePlayer} ✅`;
+      isBlack ? nameRight.innerHTML =  `✅ ${blackPlayer}` : nameLeft.innerHTML = `${whitePlayer} ✅`;
       stopTimer(isBlack ? timerRight : timerLeft);
      
 
@@ -508,13 +546,16 @@ for (let i = 0; i < 35; i++) {
         //TODO: napravit
         movesforSubmitting = moves[+isBlack];
         console.log(movesforSubmitting);
-        socket.off("kilaj");
+        //socket.off("waiting");
         socket.off("ok");
         socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting});
-        //socket.off("kilaj");
+        //socket.off("waiting");
 
       
         socket.on("ok", (data) => {
+          whiteScore += data.whiteTaken.length;
+          blackScore += data.blackTaken.length;
+          scoreboard.innerHTML = `${whiteScore} - ${blackScore}`;
           nameLeft.innerHTML = whitePlayer;
           nameRight.innerHTML = blackPlayer;
           movesOfPieces = [];
@@ -551,10 +592,13 @@ attachListeners();
 
             //ako smo mi drugi poslali naše pokrete
             moves = data.moves;
-
-            for (i = 0; i < 35; i++){
-              document.getElementById(i.toString()).className	= "cell";
-            }
+            //remove restricred classes from cells
+            document.querySelectorAll(".cell").forEach(cell => {
+              cell.classList.remove("restricted-left", "restricted-right");
+            });
+            // for (i = 0; i < 35; i++){
+            //   document.getElementById(i.toString()).className	= "cell";
+            // }
             for (i of data.whiteTaken){
               document.getElementById(i.toString()).className = "cell white taken"
               illegalMoves.push(i);
@@ -608,7 +652,7 @@ attachListeners();
         for (var id of moves){
           //id = id.padStart(2,"0");
 
-          document.getElementById(id).style="border: 3px solid #090;";
+          document.getElementById(id).style="border: 2px solid #090;";
 
         }
       }
@@ -690,6 +734,9 @@ attachListeners();
           "kT": kT,
           "tK": tK,
           "tT": tT,
+
+          
+          
         }
 
         for (i = 0; i < 35; i++){
@@ -751,6 +798,7 @@ else{
         document.getElementById(id.toString()).innerHTML = lookupTable[result[id]];
       }
       shouldEnable ? enableConfirmButton() : disableConfirmButton();
+      !isFirstMove ? attachListeners() : null;
     }
     
 
