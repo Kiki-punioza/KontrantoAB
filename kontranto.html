@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
   <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
   <title>Igra</title>
@@ -11,10 +11,30 @@
     svg{
       cursor: pointer;
     }
+    @media (max-aspect-ratio: 1/1){
+    html
+{
+  transform: scale(0.8);
+}
+    }
   </style>
  
 </head>
-
+<script 
+src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
+integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+crossorigin="anonymous">
+</script>
+<script>
+      function closePopup(){
+  document.getElementById("popup").style.display = "none";
+  window.location.href = "/play";
+}
+    function revenge(){
+      document.getElementById("revengeText").innerHTML = "Tražili ste revanž...";
+      socket.emit("revenge",{"id":gameId,"isBlack":isBlack});
+    }
+</script>
 <body oncontextmenu="return false;">
 <div class="centered">
   <div style="display: flex; flex-direction: row; margin-bottom: 50px;">
@@ -28,11 +48,7 @@
 </div>
   <button class="actionButton" id="confirmFirst" style="float:right;" disabled>🚫</button>
 
-  <script 
-   src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
-   integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
-   crossorigin="anonymous">
-  </script>
+
 
 
 
@@ -90,7 +106,9 @@
 
   const gameId = "{{ id }}";
   console.log(gameId);
-  const isAdversary = localStorage.getItem('isAdversary');
+  
+  isAdversary = localStorage.getItem('isAdversary');
+
   console.log(isAdversary);
   let  circle  =  document.     getElementById("circle")   ;
   let triangle =  document.    getElementById("triangle")  ;
@@ -177,6 +195,7 @@
     
     console.log("kliknuo njesra");
     socket.on("recieved", (data) => {
+
       
 
       
@@ -270,7 +289,9 @@
   </svg>
 
 </div>
+
     `
+
 
 
 
@@ -280,29 +301,45 @@
 
 
       newhtml = `
-      <div class="centered">
+      <div id="popup" class="popup">
+  <h2 id="gameOverText"></h2>
+  <p id="descriptionText"></p>
+  <p id="revengeText">No možete tražiti revanž...</p>
+  <button onclick="revenge()" id="revenge">Revanž</button>
+  <button onclick="closePopup()">U redu</button>
+</div>
+      <div class="centered" style="max-width: 100%;   width: 100vw;
+  height: 100vh;">
         <div style="text-align: center;">
-<h2 id="scoreboard" style="margin-bottom: 0;">0 - 0</h2>
+
         <div style="display:flex;width:100%;justify-content: space-between;"> 
-          <div style="display:flex;">
+          <div style="display:flex; ">
     
             <img class="gameProfile" src="/image/${whitePlayer}">
-            <div style="margin-left: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+            </div>
+            <div style="margin-left: 5px; flex:1; display:flex;flex-direction: column;align-items: center;justify-content: center;">
               <p style="margin: 0" id="whitePlayer">${whitePlayer}</p>        
               <p style="margin: 0" id="false">0:00</p>
          </div>
             
-    </div>
+    
+    <div style=" flex:1;">
+<p style="margin-top: 0px;margin-bottom: 5px;" id="gameTitle">${gameId}</p>
+<h2 id="scoreboard" style="margin-bottom: 0;margin-top: 5px;">0 - 0</h2>
+<p style="margin-top: 0px;margin-bottom: 0px;" id="moveCounter">Potez: 0</p>
+    </div>      
+
           
-          <div>
-          <div style="display:flex;">
-                <div style="margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+          
+                <div style="flex:1;margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
               <p style="margin: 0" id="blackPlayer">${blackPlayer}</p>        
               <p style="margin: 0" id="true">0:00</p>
          </div>
+
+         <div style=" ">
             <img class="gameProfile" src="/image/${blackPlayer}">
 
-            </div>
+            
     </div>
           </div>
        <div id="gameGrid"></div>
@@ -316,7 +353,14 @@
 </div>
 `;
   document.body.innerHTML = newhtml;
+  counter = 0;
+  moveCounter = document.getElementById("moveCounter");
   scoreboard = document.getElementById("scoreboard");
+  socket.on("revengeWanted", (data) => {
+    if (data.requestee != isBlack){
+      document.getElementById("revengeText").innerHTML = "Vaš protivnik želi revanž...";
+    }
+  });
  function attachListeners(){
 
   document.querySelectorAll(".piece").forEach(element => {
@@ -455,6 +499,64 @@ attachListeners();
   startTimer(timerRight);
   var confirmButton = document.getElementById("confirmMove");
   var giveUpButton = document.getElementById("giveUp");
+  givingUp = 0;
+  gaveUp = false;
+
+//capture every click
+document.addEventListener("click", (event) => {
+  if (event.target == giveUpButton){
+    if (gaveUp){
+      giveUpButton.innerHTML = ":(";
+      giveUpButton.style = "background-color: #a00; border 1px solid #800";
+    }
+    else{
+    givingUp++;
+    if (givingUp == 1){
+      giveUpButton.innerHTML = "⁉️";
+      giveUpButton.style = "background-color: #a00; border 1px solid #800";
+    }
+    if (givingUp == 2){
+      giveUpButton.innerHTML = ":(";
+      gaveUp = true;
+      console.log("eto odusta si bravo bogte");
+      socket.emit("giveUp",{"id":gameId,"isBlack":isBlack});
+    }
+  }
+  }
+  else if (event.target != giveUpButton && gaveUp != true){
+    givingUp = 0;
+    giveUpButton.innerHTML = "🏳️"
+    giveUpButton.style = "";
+
+  }
+});
+
+socket.on("gameOver", (data) => {
+  stopTimer(timerLeft);
+  stopTimer(timerRight);
+  console.log(data.loserIsBlack);
+  if (data.loserIsBlack == isBlack){
+    document.getElementById("gameOverText").innerHTML = "Izgubili ste.";
+    document.getElementById("descriptionText").innerHTML = "Igra je došla do kraja po bodovima.";
+  }
+  else{
+    document.getElementById("gameOverText").innerHTML = "Pobjedili ste!";
+    document.getElementById("descriptionText").innerHTML = "Čestitamo!";
+  }
+  if(data.reason == "gaveUp"){
+    document.getElementById("descriptionText").innerHTML = "Igra je završila predajom.";
+  }
+  else if (data.reason == "userLeft"){
+    document.getElementById("descriptionText").innerHTML = "Protivnik je napustio igru.";
+    document.getElementById("revenge").style.display = "none";
+    document.getElementById("revengeText").style.display = "none";
+  }
+  document.getElementById("popup").style.display = "block";
+});
+
+
+
+  
 
 const gridDisplay = document.getElementById("gameGrid");  
 let initialPieces = document.getElementById("initialPieces");
@@ -502,7 +604,9 @@ else{
 });
 
 
-
+window.addEventListener("beforeunload", function (e){
+  socket.emit("giveUp",{"id":gameId,"isBlack":isBlack,"userLeft":true});
+})
 
 for (let i = 0; i < 35; i++) {
       
@@ -535,6 +639,7 @@ for (let i = 0; i < 35; i++) {
       whiteScore = 0;
       blackScore = 0;
     submitMove = function(){
+      vrijeme1 = new Date();
      
 
       isBlack ? nameRight.innerHTML =  `✅ ${blackPlayer}` : nameLeft.innerHTML = `${whitePlayer} ✅`;
@@ -548,11 +653,14 @@ for (let i = 0; i < 35; i++) {
         console.log(movesforSubmitting);
         //socket.off("waiting");
         socket.off("ok");
-        socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting});
+        socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting,"time":vrijeme1 - vrijeme2});
         //socket.off("waiting");
 
       
         socket.on("ok", (data) => {
+          vrijeme2 = new Date();
+          counter++;
+          moveCounter.innerHTML = `Potez: ${counter}`;
           whiteScore += data.whiteTaken.length;
           blackScore += data.blackTaken.length;
           scoreboard.innerHTML = `${whiteScore} - ${blackScore}`;
@@ -588,7 +696,8 @@ attachListeners();
 
             }
             
-            
+            // Check if any piece starts the move while overlapped with another
+
 
             //ako smo mi drugi poslali naše pokrete
             moves = data.moves;
@@ -608,7 +717,28 @@ attachListeners();
               illegalMoves.push(i);
             }
             updateBoard();
-           
+            for (let i = 0; i < 4; i++) {
+              console.log("gledam")
+              let position = moves[+isBlack][i];
+              if (position !== -1 && position !== -2) {
+                let cell = document.getElementById(position.toString());
+                console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
+                if (cell.querySelectorAll(".piece").length > 1) {
+                  let allowedMoves = computeAllowedMoves(position);
+                  let onlyMoveIntoSameColor = allowedMoves.every(move => {
+                    let targetCell = document.getElementById(move);
+                    return targetCell.querySelector(isBlack ? ".black" : ".white");
+                  });
+                  if (onlyMoveIntoSameColor) {
+                    moves[+isBlack][i] = -1;
+                  }
+                  else{
+                    console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
+                  }
+                }
+              }
+            }
+            updateBoard();
             //get index for each piec
             console.log(moves);
             console.log(moves[+isBlack]);
