@@ -34,6 +34,9 @@ crossorigin="anonymous">
       document.getElementById("revengeText").innerHTML = "Tražili ste revanž...";
       socket.emit("revenge",{"id":gameId,"isBlack":isBlack});
     }
+
+
+    
 </script>
 <body oncontextmenu="return false;">
 <div class="centered">
@@ -501,7 +504,19 @@ attachListeners();
   var giveUpButton = document.getElementById("giveUp");
   givingUp = 0;
   gaveUp = false;
+  socket.on("awaitingRevenge", (data) => {
+      console.log("revaaanž")
+      if (data.isBlack != isBlack)
+      {
+        document.getElementById("revengeText").innerHTML = "Vaš protivnik traži revanž...";
+      }
 
+    });
+    socket.on("revengeGotten", (data) => {
+      localStorage.setItem('isAdversary', localStorage.getItem('isAdversary') == true ? false : true);
+      console.log(localStorage.getItem('isAdversary'));
+      window.location.href = "/game/"+data.id;
+    });
 //capture every click
 document.addEventListener("click", (event) => {
   if (event.target == giveUpButton){
