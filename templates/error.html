@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    </head>
+
+    <body>
+        
+        <div class="centered">
+
+            <h1>{{error}}</h1>
+            <p>{{errorDescription}}</p>
+            <button onclick="history.back()" type="button"> Nazad</button>
+        </div>
+
+    
+        <marquee>
+            {%for i in marquee%}
+            <span>{{i}}</span>
+            {%endfor%}
+        </marquee>
+    </body>
+
+</html>

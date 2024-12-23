@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <div class="centered">
+
+        <h2 style="font-size: 64px; margin-bottom: 0;">Privatno</h2>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+
+            
+
+                <input id="gameId" placeholder="ID" maxlength="6" name="gameId">
+                <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+                <script> 
+                 const socket = io();
+                    function joinGame(){
+                    const gameId = document.getElementById("gameId").value;
+                    console.log(gameId);
+                    socket.emit("joinGame",{id: gameId});
+                    socket.on('matched', (data) => {
+                    console.log(data);
+                    localStorage.setItem('isAdversary', data.isAdversary);
+        location.href = "/game/"+gameId;
+    });
+
+                }
+                </script>
+
+                <div style="display: flex; justify-content: center; width: 100%;">
+                    <input onclick="joinGame()" type="submit" value="Pridruži se">
+                    <button onclick="location.href='/createPrivate'" type="button">Kreiraj</button>
+                </div>
+        </div>
+        </form>
+        <button onclick="history.back()" type="button">Odustani</button>
+
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+    </div>
+
+
+
+</body>
+
+</html>

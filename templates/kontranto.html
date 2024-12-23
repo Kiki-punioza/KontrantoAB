@@ -26,6 +26,7 @@ integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q
 crossorigin="anonymous">
 </script>
 <script>
+  isGameOver = false;
       function closePopup(){
   document.getElementById("popup").style.display = "none";
   window.location.href = "/play";
@@ -302,10 +303,10 @@ crossorigin="anonymous">
 
 
 
-
+    isMoveSubmitted = false;
       newhtml = `
       <div id="popup" class="popup">
-  <h2 id="gameOverText"></h2>
+  <h2 id="gameOverText">Pobjedili ste!</h2>
   <p id="descriptionText"></p>
   <p id="revengeText">No možete tražiti revanž...</p>
   <button onclick="revenge()" id="revenge">Revanž</button>
@@ -361,7 +362,7 @@ crossorigin="anonymous">
   scoreboard = document.getElementById("scoreboard");
   socket.on("revengeWanted", (data) => {
     if (data.requestee != isBlack){
-      document.getElementById("revengeText").innerHTML = "Vaš protivnik želi revanž...";
+      document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik želi revanž!</b>";
     }
   });
  function attachListeners(){
@@ -370,7 +371,13 @@ crossorigin="anonymous">
 
                   
                   element.addEventListener("click", (event) => { 
+                    if (isMoveSubmitted){
+                      console.log("ne možeš klikat");
+                      return;
+                    }
+
                     document.addEventListener("click", (event) => {
+
                       if (!event.target.closest(".cell")) {
                         if (selectedElement) {
                           selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>', "");
@@ -417,6 +424,11 @@ crossorigin="anonymous">
 
             document.querySelectorAll(".cell").forEach(element => {
                 element.addEventListener("click", () => {
+                  console.log(isMoveSubmitted);
+                  if (isMoveSubmitted){
+                      console.log("ne možeš klikat");
+                      return;
+                    }
                 if (element.querySelectorAll(".piece").length >= 2) {
                   console.log("Cannot place more than 2 pieces on a cell.");
                   return;
@@ -508,7 +520,7 @@ attachListeners();
       console.log("revaaanž")
       if (data.isBlack != isBlack)
       {
-        document.getElementById("revengeText").innerHTML = "Vaš protivnik traži revanž...";
+        document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik traži revanž!</b>";
       }
 
     });
@@ -520,6 +532,9 @@ attachListeners();
 //capture every click
 document.addEventListener("click", (event) => {
   if (event.target == giveUpButton){
+    if(isGameOver){
+      return;
+    }
     if (gaveUp){
       giveUpButton.innerHTML = ":(";
       giveUpButton.style = "background-color: #a00; border 1px solid #800";
@@ -547,6 +562,7 @@ document.addEventListener("click", (event) => {
 });
 
 socket.on("gameOver", (data) => {
+  isGameOver = true;
   stopTimer(timerLeft);
   stopTimer(timerRight);
   console.log(data.loserIsBlack);
@@ -555,7 +571,7 @@ socket.on("gameOver", (data) => {
     document.getElementById("descriptionText").innerHTML = "Igra je došla do kraja po bodovima.";
   }
   else{
-    document.getElementById("gameOverText").innerHTML = "Pobjedili ste!";
+    
     document.getElementById("descriptionText").innerHTML = "Čestitamo!";
   }
   if(data.reason == "gaveUp"){
@@ -655,7 +671,7 @@ for (let i = 0; i < 35; i++) {
       blackScore = 0;
     submitMove = function(){
       vrijeme1 = new Date();
-     
+      isMoveSubmitted = true;
 
       isBlack ? nameRight.innerHTML =  `✅ ${blackPlayer}` : nameLeft.innerHTML = `${whitePlayer} ✅`;
       stopTimer(isBlack ? timerRight : timerLeft);
@@ -673,6 +689,18 @@ for (let i = 0; i < 35; i++) {
 
       
         socket.on("ok", (data) => {
+
+          
+          if (data.exclusiveMove[0].length > 0 || data.exclusiveMove[1].length > 0){ 
+            console.log("EVOGAADSE");
+            for (i of data.exclusiveMove[+isBlack]){
+              document.getElementById(i.toString()).classList.add("myExclusive");
+            }
+            for (i of data.exclusiveMove[+!isBlack]){
+              document.getElementById(i.toString()).classList.add("theirExclusive");
+            }
+          }
+          isMoveSubmitted = false;
           vrijeme2 = new Date();
           counter++;
           moveCounter.innerHTML = `Potez: ${counter}`;
@@ -762,9 +790,17 @@ attachListeners();
             for (let index = 0; index < 4; index++) {
     let position = moves[+isBlack][index];
     if (position !== -1) {
+
         console.log(`Processing piece ${index} at position ${position}`);
         
+        console.log(`Is the piece at position ${position} exclusive? ${data.exclusiveMove[+isBlack].includes(position)}`);
+        if (data.exclusiveMove[+isBlack].includes(position))  
+      {
+        movesOfPieces.push(data.exclusiveMove[+!isBlack]);
+      }
+      else{
         movesOfPieces.push(computeAllowedMoves(position));
+      }
         let parentDiv = document.getElementById(position.toString());
         
         // Debugging statements
@@ -956,6 +992,7 @@ else{
       //ovo radi
       document.querySelectorAll(".piece").forEach(element => {
         element.addEventListener("click", () =>{
+
           console.log(`KLIKNUO SAM NA ${element.id}`);
           if (selectedElement !== undefined){
             console.log("SELECTED VEĆ POSTOJI");
@@ -972,6 +1009,7 @@ else{
 
       document.querySelectorAll(".cell").forEach(element => {
         element.addEventListener("click", () => {
+
           console.log("klikitis");
           console.log(element.id);
           if (selectedElement !== undefined && computeAllowedMoves().includes(element.id)){

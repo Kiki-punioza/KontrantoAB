@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    </head>
+
+    <body>
+
+        <div class="centered ">
+            <h2>Kontranto</h2>
+            <div class="formatted">
+             
+            <p> Bok! Kontranto je igra koju je osmislio profesor logike i sociologije gimnazije Franje Petrića Zadar <b><i><u>Siniša Matić</u></i></b>. Igra je osmišljena pod načelom <i>predvidi i budi nepredvidiv</i>. Igru je najlakše svladati igrajući ju. No ukratko, pravila igre glase ovako: </p>
+            
+            <p>Igrači imaju četiri figure i jedno su od dvije boje: crne ili bijele. Dvije figure su trokut, a dvije krug. <b>Za bijelog igrača vrijedi da može zauzimati svoju vrstu figure, a crni obrnutu vrstu.</b></p>
+            
+            <p>Prije početka runde igrači izaberu trokut ili krug. Ako izaberu isti lik, prvi igrač je bijele, a ako ne izaberu, crne.</p>
+
+            <p>Polje za igranje je veličine 7x5. Na prvom potezu igrači stave svoje figure na jedno od dopuštenih polja. Igrač jedino ne smije staviti na polja drugog igrača. Ta polja su veličine 3x3 na njihovoj strani ploče.</p>
+        
+            <p>Igrači donesu svoje poteze te ih pošalju. <b>Ne mogu vidjeti potez drugog igrača dok donose vlastiti potez.</b> Sada igrači mogu micati svoje figure u tih 9 polja u i oko figure zanemarujući navedena polja od 3x3. Vlastite figure se ne smiju staviti na isto polje. Sve figure se mogu micati unutar jednog poteza.</p>
+        
+            <p>Kad igrači stave jedno od svojih figura na isto polje, polje je zauzeto po vrsti tih figura. To polje je obojano u boju figure koja je pobjedila <b>sudar</b>. Igrač dobije jedan (1) bod za pobijeđeni sudar. Polje mora biti napušteno unutar tog poteza te se više ne može posjetiti.</p> 
+                
+            <p>Može se dogoditi da se cijelo polje rastavi na manja polja, odvojena zauzetim poljima. U tim poljima vrijedi radi prevencije odugovlačenja, zbivat će se <b>izvanredni potezi</b>.</p>
+        
+            <p>Izvanredni potez se odvija u dvije situacije:
+                <ol>
+                    <li>Ako je prošlo više poteza no što je ćelija unutar polja <b>bez sudara</b></li>
+                <li>Ako figure unutar novog polja uopće nisu pomaknute nakon što se polje rastavilo</li>
+            </ol>
+            </p>
+
+            <p>Provodi se na način da igrači izaberu figuru s kojom će ga provesti. Tada dobiju mogućnost ostati na svom polju ili otići na polje figure drugog igrača.</p> 
+
+            <p>U slučaju da slete na isto polje, prate se uobičajena pravila sudara. No ako se zaobiđu, pravila sudara su obrnuta te je obojano novo polje onoga komu pravila sada idu u korist.</p>
+
+            <p>Partija završava kad se ispune barem jedno od uvjeta:</p>
+            <ol>
+                <li>Jedno od igrača ima osamnaest (18) bodova, taj je pobjednik</li>
+                <li>Igrač preda partiju, njegov je protivnik pobjednik</li>
+                <li>Ako se ne može više doći do sudara, onaj s više bodova je pobjednik.</li>
+            </ol>
+            <p>U slučaju da se ne može doći do sudara a igrači su izjednačeni u bodovima, igra se prestaje i dolazi do <b>DODATNOG IZVANVREMENSKOG DVOKORAČNOG SUDARA SMRTI</b>.</p>
+            <p>Prvi korak se odvija na dva susjedna polja na kojem igrači mogu izabrati koja će figura biti stavljena. Drugi korak igrači mogu pomaknuti svoju figuru na jedino drugo polje ili ostati na njemu. Ako se ne pomaknu, pobjeđuje onaj tko mu je izmaknuo. </p>
+            
+            <p>Pravila nisu jednostavna. U Vašu korist prilažem Vam <a href="/static/pravila.pdf">originalna pravila, kako ih je napisao <b><i><u>S.M.</u></i></b></a>. Želim vam sretno razumijevanje ovih Pravila i svu sreću u Vašim partijama! </p>
+            
+        </div>
+        <button onclick="location.href='/'" type="button"> Nazad</button>
+        
+
+</div>
+
+
+    </body>
+</html>

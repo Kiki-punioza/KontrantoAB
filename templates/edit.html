@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+    <div class="centered">
+
+        <div class="profile-card">
+            <div>
+
+                <div class="profile-picture">
+                    
+                    <img id="picture" src="{{ url_for('showImage', username=session['user']) }}">
+                    
+                        <label class="overlay" for="profile-picture">Promijeni sliku</label>
+                   
+                </div>
+                <h2>{{ session["user"] }}</h2>
+            </div>
+            <div class="marqueecontainer">
+                <form action="/editprofile" method="post">
+                   
+                <input id="profile-picture" type="file" accept="image/*" style="display: none;"> 
+                <input class="iinput" name="username" placeholder="Novo ime" maxlength="24" value="{{ session['user'] }}">
+                <input class="iinput" name="password" type="password" placeholder="Lozinka">
+                <input type="hidden" id="resized-image" name="profilePictureData">
+                <input type="hidden" name="originalUsername" value="{{ session['user']}}">
+                <div class="name-and-elo">
+                    <input type="checkbox" name="removeProfilePicture" id="removeP">
+                    <label class="label" for="removeP">Makni sliku</label>
+                    <button type="submit">Potvrdi</button>
+
+                    <button type="button" onclick="history.back()">Nazad</button>
+                </div>
+            </form>
+                
+            
+        </div>
+
+        </div>
+       
+
+        </div>
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+    </div>
+
+
+
+</body>
+<script>
+document.getElementById('profile-picture').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Create a new image object to hold the loaded file
+        const img = new Image();
+        
+        // Create a FileReader to read the file as a data URL
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Set the image source to the file's data URL
+            img.src = e.target.result;
+            
+            img.onload = function() {
+                // Create a canvas element to resize the image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas dimensions (256x256)
+                const maxSize = 100;
+                let width = img.width;
+                let height = img.height;
+                
+                // Resize the image to fit within the 256x256 bounds
+                if (width > height) {
+                    if (width > maxSize) {
+                        height = height * (maxSize / width);
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width = width * (maxSize / height);
+                        height = maxSize;
+                    }
+                }
+                
+                // Set canvas size
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw the image on the canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert canvas to base64 image (data URL)
+                const resizedDataUrl = canvas.toDataURL('image/png');
+                
+                // Update the hidden input with the resized image data
+                document.getElementById('resized-image').value = resizedDataUrl;
+                console.log(document.getElementById("resized-image").value);
+                // Optionally update the preview image
+                const previewImg = document.getElementById('picture');
+                if (previewImg) {
+                    previewImg.src = resizedDataUrl;
+                }
+            };
+        };
+        
+        // Read the selected file as data URL
+        reader.readAsDataURL(file);
+    }
+});
+
+</script>
+
+
+</html>

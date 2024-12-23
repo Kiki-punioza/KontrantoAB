@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    </head>
+
+    <body>
+        
+        <div class="centered">
+
+            {% if isPrivate %}
+            <h1>{{ id }}</h1>
+            <p>Podijelite ID partije s drugim igračem</p>
+            <button onclick="location.href='cancel/{{ id }}'" type="button">Odustani</button>
+
+
+
+
+
+            {% elif not isPrivate %}
+            <p style="text-align: center;">Trenutačno čekate da se netko drugi Vama pridruži.</p>
+            <button onclick="location.href='cancel/{{ id }}'" type="button">Odustani</button>
+            {% endif %}
+            
+        </div>
+        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+        <script>
+        const socket = io();
+        gameId = "{{ id }}";
+        socket.emit("awaitAdversary", {id:"{{ id }}"})
+        console.log("awaiting adversary");
+        socket.on('matched', (data) => {
+        console.log(data);
+        localStorage.setItem('isAdversary', data.isAdversary);
+    location.href = "/game/"+gameId;
+});
+
+            
+        </script>
+
+    </body>
+
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+        <title>Kontranto: Ali Bolje!</title>
+    </head>
+    <body>
+
+        <div class="centered">
+
+        <img class="image" src="{{ url_for('static',filename='wordart.png') }}">
+        {% if session.get("user") %}
+        <p>Bok, <a href="/user/profile/{{ session['user']}}"!>{{ session['user'] }}</a>!</p>
+        
+        <button onclick="location.href='/play'" type="button">Igraj</button>
+        <button onclick="location.href='/about'" type="button">Upute</button>
+        <button onclick="location.href='/logout'" type="button">Odjava</button>
+        {% else %}
+        <button onclick="location.href='/about'" type="button">Što je ovo?</button>
+        <button onclick="location.href='/login'" type="button">Prijava</button>
+        {% endif %}
+
+        </div>
+        
+
+    </body>
+</html>
+
+

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+
+    <body>
+        
+        <div class="centered">
+            
+            <div class="profile-card">
+                
+            <div class="profile-picture">
+            <img width="100" src="{{ url_for('showImage', username=username) }}">
+        </div>
+        
+        <div class="profile-details">
+            <div class="name-and-elo">
+            <h2>{{ username }}</h2><small style="margin-top:5px; margin-left: 5px;">(742)</small>
+        </div>
+        
+            <div class="profile-stats">
+            
+            <p>K/D: 1.03</p>
+            <p>Odigrao: 32</p>
+        </div>
+        
+        </div>
+        {% if session["user"] == username %} 
+        <button class="edit"  onclick="location.href='/edit'">Promijeni</button>
+        {% endif %}
+        </div>
+        <button onclick="location.href='/'">Nazad</button>
+    
+
+    </body>
+</html>
