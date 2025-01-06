@@ -4,20 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, user-scalable=no">
-  <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
-  <title>Igra</title>
-  <style>
-    svg{
-      cursor: pointer;
-    }
-    @media (max-aspect-ratio: 1/1){
-    html
-{
-  transform: scale(0.8);
-}
-    }
-  </style>
+  <title>Igra {{ id }}</title>
+
  
 </head>
 <script 
@@ -32,7 +22,7 @@ crossorigin="anonymous">
   window.location.href = "/play";
 }
     function revenge(){
-      document.getElementById("revengeText").innerHTML = "Tražili ste revanž...";
+      document.getElementById("revengeText").innerHTML = "Tražili ste revanš...";
       socket.emit("revenge",{"id":gameId,"isBlack":isBlack});
     }
 
@@ -40,14 +30,51 @@ crossorigin="anonymous">
     
 </script>
 <body oncontextmenu="return false;">
+  <style>
+    #gameGrid {
+
+display: grid;
+  direction: ltr;
+  grid-template-columns: repeat(7, 80px);
+  grid-template-rows: repeat(5, 80px);
+  gap: 4px;
+  margin: 20px auto;
+  grid-auto-flow: column;
+  
+
+  
+}
+    svg{
+      cursor: pointer;
+    }
+    @media (max-aspect-ratio: 1/1){
+    html
+{
+  transform: scale(0.8);
+}
+#gameGrid {
+
+  display: grid;
+    direction: rtl;
+    grid-template-columns: repeat(5, 80px);
+    grid-template-rows: repeat(7, 80px);
+    gap: 4px;
+    margin: 20px auto;
+    grid-auto-flow: row;
+    
+  
+    
+  }
+    }
+  </style>
 <div class="centered">
   <div style="display: flex; flex-direction: row; margin-bottom: 50px;">
   <svg height="100" width="100" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="50" cy="50" r="47" stroke="black" stroke-width="3" fill="grey" />
+    <circle cx="50" cy="50" r="47" stroke=${blackColor} stroke-width="3" fill="grey" />
   </svg>
 
   <svg height="100" width="100" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="50,3 97,97 3,97" stroke="black" stroke-width="3" fill="grey" />
+    <polygon points="50,3 97,97 3,97" stroke=${blackColor} stroke-width="3" fill="grey" />
   </svg>
 </div>
   <button class="actionButton" id="confirmFirst" style="float:right;" disabled>🚫</button>
@@ -123,10 +150,15 @@ crossorigin="anonymous">
   let whitePlayer;
   let blackPlayer;
   let selected;
-  
+  let gettingRevenge = false;
+
+  socket.onAny((eventName, ...args) => {
+  console.log(`ZBIO SE DOGAĐAJ ${eventName} SA ARGUMENTIMA ${args}`);
+});
+
   circle.addEventListener('click', () => {
-     circle.   innerHTML   =    '<circle cx="50" cy="50" r="47" stroke="black" stroke-width="3" fill="#ccc" />'   ;
-    triangle.  innerHTML   =    '<polygon points="50,3 97,97 3,97" stroke="black" stroke-width="3" fill="grey" />';
+     circle.   innerHTML   =    '<circle cx="50" cy="50" r="47" stroke=${blackColor} stroke-width="3" fill="#ccc" />'   ;
+    triangle.  innerHTML   =    '<polygon points="50,3 97,97 3,97" stroke=${blackColor} stroke-width="3" fill="grey" />';
 
     selected = 0;
     button.disabled = false;
@@ -136,8 +168,8 @@ crossorigin="anonymous">
 
 
   triangle.addEventListener('click', () =>{
-     circle.   innerHTML   =    '<circle cx="50" cy="50" r="47" stroke="black" stroke-width="3" fill="grey" />'   ;
-    triangle.  innerHTML   =    '<polygon points="50,3 97,97 3,97" stroke="black" stroke-width="3" fill="#ccc" />';
+     circle.   innerHTML   =    '<circle cx="50" cy="50" r="47" stroke=${blackColor} stroke-width="3" fill="grey" />'   ;
+    triangle.  innerHTML   =    '<polygon points="50,3 97,97 3,97" stroke=${blackColor} stroke-width="3" fill="#ccc" />';
 
     selected = 1;
     button.disabled = false;
@@ -208,7 +240,8 @@ crossorigin="anonymous">
       console.log("MEČAO")
       console.log(data.isBlack);
       isBlack = data.isBlack;
-      
+
+
 
 
 
@@ -226,21 +259,33 @@ crossorigin="anonymous">
 
       blackPlayer = isBlack ? "{{ session['user'] }}" : data.otherPlayer;
       whitePlayer = isBlack ? data.otherPlayer : "{{ session['user'] }}";
+
+      myColor = "{{ session['theme'] }}";
+      if (myColor == "dark" || myColor == "light"){
+        whiteColor = "white";
+        blackColor = "black";
+      }
+      else{
+        whiteColor = "pink";
+        blackColor = "#6AABFF";
+      }
+      
+
       const  K  =   `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="38" cy="38" r="35" stroke="white" stroke-width="3" fill="black" />
+    <circle cx="38" cy="38" r="35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
   </svg>
 
     `
       const T =   `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="38,3 73,73 3,73" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
   </svg>
     `
 
       const  k  =   `
   <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="38" cy="38" r="35" stroke="black" stroke-width="3" fill="white" />
+    <circle cx="38" cy="38" r="35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
   </svg>
 
     `
@@ -248,37 +293,37 @@ crossorigin="anonymous">
 
 
   <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="38,3 73,73 3,73" stroke="black" stroke-width="3" fill="white" />
+    <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
   </svg>
     `
 
       const kK = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-   <circle cx="19" cy="19" r="17" stroke="black" stroke-width="3" fill="white" />
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
 </svg>
 <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-  <circle cx="19" cy="19" r="17" stroke="white" stroke-width="3" fill="black" />
+  <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
 </svg>
 </div>
       `
       const kT = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-   <circle cx="19" cy="19" r="17" stroke="black" stroke-width="3" fill="white" />
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
 </svg>
   <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="19,3 35,35 3,35" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
   </svg>
 </div>
       `
     const tK = `
     <div style="display: flex; justify-content: center; align-content: center;">
   <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="19,3 35,35 3,35" stroke="black" stroke-width="3" fill="white" />
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
   </svg>
 <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-   <circle cx="19" cy="19" r="17" stroke="white" stroke-width="3" fill="black" />
+   <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
 </svg>
 
 </div>
@@ -286,10 +331,10 @@ crossorigin="anonymous">
     const tT = `
     <div style="display: flex; justify-content: center; align-content: center;">
   <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="19,3 35,35 3,35" stroke="black" stroke-width="3" fill="white" />
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
   </svg>
   <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="19,3 35,35 3,35" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
   </svg>
 
 </div>
@@ -297,19 +342,57 @@ crossorigin="anonymous">
     `
 
 
-
-
+  
+  haveRecievedExclusive = undefined;
+  isExclusiveMove = undefined;
     
 
 
 
     isMoveSubmitted = false;
       newhtml = `
+  <style>
+    #gameGrid {
+
+display: grid;
+  direction: ltr;
+  grid-template-columns: repeat(7, 80px);
+  grid-template-rows: repeat(5, 80px);
+  gap: 4px;
+  margin: 20px auto;
+  grid-auto-flow: row;
+  
+
+  
+}
+    svg{
+      cursor: pointer;
+    }
+    @media (max-aspect-ratio: 1/1){
+    html
+{
+  transform: scale(0.8);
+}
+#gameGrid {
+
+  display: grid;
+    direction: rtl;
+    grid-template-columns: repeat(5, 80px);
+    grid-template-rows: repeat(7, 80px);
+    gap: 4px;
+    margin: 20px auto;
+    grid-auto-flow: column;
+    
+  
+    
+  }
+    }
+  </style>
       <div id="popup" class="popup">
   <h2 id="gameOverText">Pobjedili ste!</h2>
   <p id="descriptionText"></p>
-  <p id="revengeText">No možete tražiti revanž...</p>
-  <button onclick="revenge()" id="revenge">Revanž</button>
+  <p id="revengeText">No možete tražiti revanš...</p>
+  <button onclick="revenge()" id="revenge">Revanš</button>
   <button onclick="closePopup()">U redu</button>
 </div>
       <div class="centered" style="max-width: 100%;   width: 100vw;
@@ -322,7 +405,7 @@ crossorigin="anonymous">
             <img class="gameProfile" src="/image/${whitePlayer}">
             </div>
             <div style="margin-left: 5px; flex:1; display:flex;flex-direction: column;align-items: center;justify-content: center;">
-              <p style="margin: 0" id="whitePlayer">${whitePlayer}</p>        
+              <p style="margin: 0" id="whitePlayer">${whitePlayer} </p>        
               <p style="margin: 0" id="false">0:00</p>
          </div>
             
@@ -336,7 +419,7 @@ crossorigin="anonymous">
           
           
                 <div style="flex:1;margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
-              <p style="margin: 0" id="blackPlayer">${blackPlayer}</p>        
+              <p style="margin: 0" id="blackPlayer">${blackPlayer} </p>        
               <p style="margin: 0" id="true">0:00</p>
          </div>
 
@@ -346,9 +429,11 @@ crossorigin="anonymous">
             
     </div>
           </div>
+          
        <div id="gameGrid"></div>
-       <div id="initialPieces" style="display:flex;width:100%;justify-content: center; gap:10px;"></div>
        </div>
+       <div id="initialPieces" style="display:flex;width:100%;justify-content: center; gap:10px;"></div>
+       
   <div style="display: flex;flex-direction: row;gap: 66px;">
 
   <button class="actionButton" id="giveUp" style="float:left;">🏳️</button>
@@ -362,15 +447,106 @@ crossorigin="anonymous">
   scoreboard = document.getElementById("scoreboard");
   socket.on("revengeWanted", (data) => {
     if (data.requestee != isBlack){
-      document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik želi revanž!</b>";
+      document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik želi revanš!</b>";
     }
   });
+  socket.on("exclusiveMoveDecided", (data) =>{
+    console.log("ŽŠ exclusive move decided");
+    
+    if(data.isBlack != isBlack){
+      
+      haveRecievedExclusive = data.cell;
+      if(isExclusiveMove !== undefined){
+        enableConfirmButton();
+        for(i = 0; i < 4; i++){
+          for(j = 0; j < 4; j++){
+            myPiece = moves[+isBlack][i];
+            theirPiece = moves[+!isBlack][j];
+            if (myPiece != -1 && theirPiece != -1){
+              console.log(`myPiece: ${myPiece} theirPiece: ${theirPiece}`);
+              if(myPiece == theirPiece){
+                disableConfirmButton();
+              }
+            }
+           
+          }
+        }
+        //if the collisions have been resolved
+        
+      }
+      else{
+        disableConfirmButton();
+      }
+    document.querySelectorAll(".theirExclusive").forEach(el => {
+                
+                
+                  el.classList.remove("theirExclusive");
+                
+              });
+    console.log(data.cell);
+    console.log(document.getElementById(data.cell));
+    console.log("LEL");
+    document.getElementById(data.cell).classList.add("theirExclusive");
+    }
+  });
+
+myExclusive = undefined;
  function attachListeners(){
 
   document.querySelectorAll(".piece").forEach(element => {
 
                   
                   element.addEventListener("click", (event) => { 
+          
+                    if(element.closest(".cell").classList.contains("myExclusive")){
+
+              console.log(`ZIĐ ${movesOfPieces[+element.getAttribute("index")]}`);
+              if (isExclusiveMove === undefined){
+                movesOfPieces[+element.getAttribute("index")] = [];
+                console.log("ex je und ĐŽ");
+                document.querySelectorAll(".myExclusive").forEach(el => {
+                
+                  el.classList.remove("myExclusive");
+                
+                
+              });
+              element.closest(".cell").classList.add("myExclusive");
+              movesOfPieces[+element.getAttribute("index")].push(element.closest(".cell").id); 
+              isExclusiveMove = element.closest(".cell").id;
+              myExclusive = +element.getAttribute("index");
+              if(haveRecievedExclusive !== undefined){
+                enableConfirmButton();
+        for(i = 0; i < 4; i++){
+          for(j = 0; j < 4; j++){
+            myPiece = moves[+isBlack][i];
+            theirPiece = moves[+!isBlack][j];
+            if (myPiece != -1 && theirPiece != -1){
+              console.log(`myPiece: ${myPiece} theirPiece: ${theirPiece}`);
+              if(myPiece == theirPiece){
+                disableConfirmButton();
+              }
+            }
+           
+          }
+        }
+      }
+      else{
+        disableConfirmButton();
+      }
+              socket.emit("selectedForExclusive",{"id":gameId,"isBlack":isBlack,"cell":element.closest(".cell").id});
+                ;}
+              
+
+              
+              if(haveRecievedExclusive !== undefined){
+                document.getElementById(haveRecievedExclusive).classList.add("theirExclusive");
+                console.log("ovaj se već smislia ĐŽ")
+                movesOfPieces[+element.getAttribute("index")].push(haveRecievedExclusive);
+                console.log(`${movesOfPieces[+element.getAttribute("index")]} ${haveRecievedExclusive} ŽŠ`);
+                haveRecievedExclusive = undefined;
+
+              }
+            }
                     if (isMoveSubmitted){
                       console.log("ne možeš klikat");
                       return;
@@ -403,6 +579,9 @@ crossorigin="anonymous">
               selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>',"");
               
             }
+            //ako je moj za izvanredni
+
+
             selectedElement = element;
             selectedPiece = element.id;
             selectedId = element.closest(".cell").id;
@@ -520,12 +699,14 @@ attachListeners();
       console.log("revaaanž")
       if (data.isBlack != isBlack)
       {
-        document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik traži revanž!</b>";
+        document.getElementById("revengeText").innerHTML = "<b>Vaš protivnik traži revanš!</b>";
       }
 
     });
     socket.on("revengeGotten", (data) => {
-      localStorage.setItem('isAdversary', localStorage.getItem('isAdversary') == true ? false : true);
+      gettingRevenge = true;
+      document.getElementById("descriptionText").innerHTML = document.getElementById("descriptionText").innerHTML;
+      //localStorage.setItem('isAdversary', localStorage.getItem('isAdversary') == true ? false : true);
       console.log(localStorage.getItem('isAdversary'));
       window.location.href = "/game/"+data.id;
     });
@@ -563,11 +744,28 @@ document.addEventListener("click", (event) => {
 
 socket.on("gameOver", (data) => {
   isGameOver = true;
+  document.querySelectorAll(".cell").forEach(element => {
+    //clone them
+    const newElement = element.cloneNode(true);
+    element.parentNode.replaceChild(newElement, element);
+  });
+  document.querySelectorAll(".piece").forEach(element => {
+    //clone them
+    const newElement = element.cloneNode(true);
+    element.parentNode.replaceChild(newElement, element);
+  });
+  console.log("disableao sve event listenere");
+
+  disableConfirmButton();
   stopTimer(timerLeft);
   stopTimer(timerRight);
   console.log(data.loserIsBlack);
   if (data.loserIsBlack == isBlack){
+
+    console.log(data.loserIsBlack);
     document.getElementById("gameOverText").innerHTML = "Izgubili ste.";
+
+  
     document.getElementById("descriptionText").innerHTML = "Igra je došla do kraja po bodovima.";
   }
   else{
@@ -577,12 +775,19 @@ socket.on("gameOver", (data) => {
   if(data.reason == "gaveUp"){
     document.getElementById("descriptionText").innerHTML = "Igra je završila predajom.";
   }
+  if(data.reason == "segregation"){
+    document.getElementById("descriptionText").innerHTML = "Došlo je do segregacije.";
+  }
   else if (data.reason == "userLeft"){
     document.getElementById("descriptionText").innerHTML = "Protivnik je napustio igru.";
     document.getElementById("revenge").style.display = "none";
     document.getElementById("revengeText").style.display = "none";
   }
   document.getElementById("popup").style.display = "block";
+  Object.defineProperty(document.getElementById("gameOverText"), "innerHTML", {
+    writable: false,
+    configurable: false
+  });
 });
 
 
@@ -636,7 +841,10 @@ else{
 
 
 window.addEventListener("beforeunload", function (e){
+  if(!gettingRevenge){
+
   socket.emit("giveUp",{"id":gameId,"isBlack":isBlack,"userLeft":true});
+  }
 })
 
 for (let i = 0; i < 35; i++) {
@@ -684,15 +892,133 @@ for (let i = 0; i < 35; i++) {
         console.log(movesforSubmitting);
         //socket.off("waiting");
         socket.off("ok");
-        socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting,"time":vrijeme1 - vrijeme2});
+        socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":movesforSubmitting,"time":vrijeme1 - vrijeme2,"exclusiveMove":myExclusive});
+        haveRecievedExclusive = undefined;
+        isExclusiveMove = undefined;
+        myExclusive = undefined;
         //socket.off("waiting");
 
       
         socket.on("ok", (data) => {
+          if (data.didss == true){
+            counter++;
+            vrijeme2 = new Date();
+            //remove listeners for everything
+            selectedPiece = undefined;
+            whereICanPlace = isBlack ? "1" : "0";
+            havePlaced = false;
+            color = isBlack ? "black" : "white";
+            otherColor = isBlack ? "white" : "black";
+            
+            document.querySelectorAll(".cell").forEach(element => {
+              element.removeEventListener("click", () => {});
+              element.addEventListener("click", () => {
+                console.log("KLIKNUO SAM NA ČELL");
+                if (havePlaced){
+                      return;
+                    }
+                  if (element.id == whereICanPlace && selectedPiece !== undefined){
+
+                    havePlaced = true;
+                    element.innerHTML = document.getElementById(selectedPiece).outerHTML;
+                    document.getElementById("initialPieces").innerHTML = "";
+                  }
+              });
+            });
+            document.querySelectorAll(".piece").forEach(element => {
+              element.removeEventListener("click", () => {});
+              element.addEventListener("click", () => {
+                console.log("KLIKNUO SAM NA KOMAD");
+                  if (selectedPiece !== undefined){
+                    document.getElementById(selectedPiece).innerHTML = document.getElementById(selectedPiece).innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>', "");
+                  }
+                  element.innerHTML = '<rect width="76" height="76" fill="#ef9"></rect>'+element.innerHTML;
+                  selectedPiece = element.id;
+
+              });
+            });
+            
+
+
+            newhtml = `
+      <div id="popup" class="popup">
+  <h2 id="gameOverText">Pobjedili ste!</h2>
+  <p id="descriptionText"></p>
+  <p id="revengeText">No možete tražiti revanš...</p>
+  <button onclick="revenge()" id="revenge">Revanš</button>
+  <button onclick="closePopup()">U redu</button>
+</div>
+      <div class="centered" style="max-width: 100%;   width: 100vw;
+  height: 100vh;">
+        <div style="text-align: center;">
+
+        <div style="display:flex;width:100%;justify-content: space-between;"> 
+          <div style="display:flex; ">
+    
+            <img class="gameProfile" src="/image/${whitePlayer}">
+            </div>
+            <div style="margin-left: 5px; flex:1; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+              <p style="margin: 0" id="whitePlayer">${whitePlayer}</p>        
+              <p style="margin: 0" id="false">0:00</p>
+         </div>
+            
+    
+    <div style=" flex:1;">
+<p style="margin-top: 0px;margin-bottom: 5px;" id="gameTitle">${gameId}</p>
+<h2 id="scoreboard" style="margin-bottom: 0;margin-top: 5px;">DIDSS</h2>
+<p style="margin-top: 0px;margin-bottom: 0px;" id="moveCounter">Potez: ${counter}</p>
+    </div>      
+
+          
+          
+                <div style="flex:1;margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+              <p style="margin: 0" id="blackPlayer">${blackPlayer}</p>        
+              <p style="margin: 0" id="true">0:00</p>
+         </div>
+
+         <div>
+            <img class="gameProfile" src="/image/${blackPlayer}">
+
+            
+    </div>
+          </div>
+       <div id="gameGrid"><div class="cell restricted-left" id="0" style=""></div><div class="cell restricted-right" id="1" style=""></div></div>
+       <div id="initialPieces" style="display:flex;width:100%;justify-content: center; gap:10px;">
+          <svg height="76" class="piece ${color}" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="38" cy="38" r="35" stroke="${otherColor}" stroke-width="3" fill="${color}"></circle>
+  </svg>
+
+    
+  <svg height="76" class="piece ${color}" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke="${otherColor}" stroke-width="3" fill="${color}"></polygon>
+  </svg>
+        </div>
+       </div>
+  <div style="display: flex;flex-direction: row;gap: 66px;">
+
+  <button class="actionButton" id="giveUp" style="float:left;">🏳️</button>
+
+  <button class="actionButton" id="didssMove" style="float:right; disabled">🚫</button>
+</div>
+`;
+
+document.body.innerHTML = newhtml;
+document.getElementById("didssMove").addEventListener("click", () => {
+            socket.emit("submitMoves",{"id":gameId,"isBlack":isBlack,"moves":selectedPiece,"time":Date() - vrijeme2,"isDidss":true});
+          });
+          return;
+            }
+          //add listener for didssMove
+
+          document.querySelectorAll(".cell").forEach(cell => {
+              cell.classList.remove("restricted-left", "restricted-right");
+              cell.classList.remove("myExclusive", "theirExclusive");
+            });
 
           
           if (data.exclusiveMove[0].length > 0 || data.exclusiveMove[1].length > 0){ 
             console.log("EVOGAADSE");
+            console.log(data.exclusiveMove);
             for (i of data.exclusiveMove[+isBlack]){
               document.getElementById(i.toString()).classList.add("myExclusive");
             }
@@ -745,9 +1071,7 @@ attachListeners();
             //ako smo mi drugi poslali naše pokrete
             moves = data.moves;
             //remove restricred classes from cells
-            document.querySelectorAll(".cell").forEach(cell => {
-              cell.classList.remove("restricted-left", "restricted-right");
-            });
+
             // for (i = 0; i < 35; i++){
             //   document.getElementById(i.toString()).className	= "cell";
             // }
@@ -760,6 +1084,7 @@ attachListeners();
               illegalMoves.push(i);
             }
             updateBoard();
+
             for (let i = 0; i < 4; i++) {
               console.log("gledam")
               let position = moves[+isBlack][i];
@@ -768,12 +1093,22 @@ attachListeners();
                 console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
                 if (cell.querySelectorAll(".piece").length > 1) {
                   let allowedMoves = computeAllowedMoves(position);
+                  if (allowedMoves.length ==0){
+                    console.log(`nema ih ${position}`);
+                    moves[+isBlack][i] = -1;
+                  }
+                 
+                    
                   let onlyMoveIntoSameColor = allowedMoves.every(move => {
                     let targetCell = document.getElementById(move);
                     return targetCell.querySelector(isBlack ? ".black" : ".white");
                   });
                   if (onlyMoveIntoSameColor) {
+                    posIAmMovingInto = allowedMoves[0];
+                    movesFromThePosIAmMovingInto = computeAllowedMoves(posIAmMovingInto);
+                    if (movesFromThePosIAmMovingInto.length == 1) {
                     moves[+isBlack][i] = -1;
+                  }
                   }
                   else{
                     console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
@@ -782,6 +1117,9 @@ attachListeners();
               }
             }
             updateBoard();
+            if (data.exclusiveMove[0].length > 0 || data.exclusiveMove[1].length > 0){ 
+              console.log("DISABLEAM GA");
+              disableConfirmButton();}
             //get index for each piec
             console.log(moves);
             console.log(moves[+isBlack]);
@@ -893,6 +1231,7 @@ attachListeners();
 
       
       updateBoard = function(){
+        
         shouldEnable = true;
         myPieces = moves[+isBlack];
         for (i of myPieces){
@@ -969,6 +1308,22 @@ else{
   }
 }
 }
+    let myPositions = moves[+isBlack];
+    for (let i = 0; i < myPositions.length; i++) {
+      let pos = myPositions[i];
+      if (pos < 0) continue;
+      let ownLegal = movesOfPieces[i] || [];
+      if (ownLegal.length === 1) {
+        let target = ownLegal[0];
+        let occupantIndex = myPositions.indexOf(target);
+        if (occupantIndex !== -1 && occupantIndex !== i) {
+          let occupantLegal = movesOfPieces[occupantIndex] || [];
+          if (occupantLegal.length === 1 && occupantLegal[0] === target) {
+            myPositions[i] = -1;
+          }
+        }
+      }
+    }
 
       for (id in result){
         if (["kk","tt","KT","TK"].includes(result[id])) {

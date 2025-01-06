@@ -2,12 +2,65 @@
 <html>
     <head>
         <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+
+    <title>Igrač {{ username }}</title> 
+    <style>
+        .popup{
+            position: fixed; /* Ensures popup is relative to the viewport */
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+        }
+        .profile-card{
+            margin-top:50px;
+        }
+        .clickable {
+            cursor: pointer;
+            
+        }
+        .clickable:hover {
+            color: #777;
+        }
+        @media (max-aspect-ratio: 1/1){
+            .popup{
+            position: fixed; /* Ensures popup is relative to the viewport */
+top: 15%;
+left: 50%;
+transform: translate(-50%, -50%);
+box-shadow: 0 80px 80px rgba(0, 0, 0, 0.5);
+        }
+            .edit{margin-left: -80px;
+            margin-top:80px;}
+            .profile-card{
+            margin-top:00px;
+        }
+html
+{
+
+transform: scale(0.9);
+}
+}
+    </style>
+    </head>
+    <script>
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+        function openPopup() {
+            document.getElementById("popup").style.display = "block";
+
+        }
+    </script>
     <body>
-        
+        <div id="popup" class="popup">
+            <h2 id="gameOverText">O bodovanju</h2>
+            <p id="descriptionText">kontranto.com određuje bodove igrača od 0-36.</p>
+            <p id="descriptionText">Vaše bodove čini prosjek razlika bodova Vaših najnovijih {{ firstN }} igara plus osamnaest (18) .</p>
+            <button onclick="closePopup()">U redu</button>
+          </div>
         <div class="centered">
             
             <div class="profile-card">
@@ -18,22 +71,90 @@
         
         <div class="profile-details">
             <div class="name-and-elo">
-            <h2>{{ username }}</h2><small style="margin-top:5px; margin-left: 5px;">(742)</small>
+            <h2>{{ username }}</h2><small style="margin-top:5px; margin-left: 5px; cursor: help;" onclick="openPopup()" >({{ points }})</small>
         </div>
         
             <div class="profile-stats">
             
-            <p>K/D: 1.03</p>
-            <p>Odigrao: 32</p>
+            <p>Zauzeo: {{ cummulative }}</p>
+            <p>Odigrao: {{ games|length }}</p>
         </div>
         
         </div>
         {% if session["user"] == username %} 
         <button class="edit"  onclick="location.href='/edit'">Promijeni</button>
         {% endif %}
+        
         </div>
+        <br>
+        
+        <div class="games-cards">
+
+            
+            {% for game in games %}
+            <div class="games-card">
+                {% if game["winner"] == game["white"] %}
+                <p>
+                    {% if game["white"] == username %}
+                        <b>{{ game["white"] }}</b>
+                    {% else %}
+                        <b>
+                            <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}' ">
+                                {{ game["white"] }}
+                            </clickable>
+                        </b>
+                    {% endif %}
+                    vs
+                    {% if game["black"] == username %}
+                        {{ game["black"] }}
+                    {% else %}
+                        <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
+                            {{ game["black"] }}
+                        </clickable>
+                    {% endif %}
+                </p>
+                {% else %}
+                <p>
+                    {% if game["white"] == username %}
+                        {{ game["white"] }}
+                    {% else %}
+                        <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}'">
+                            {{ game["white"] }}
+                        </clickable>
+                    {% endif %}
+                    vs
+                    {% if game["black"] == username %}
+                        <b>{{ game["black"] }}</b>
+                    {% else %}
+                        <b>
+                            <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
+                                {{ game["black"] }}
+                            </clickable>
+                        </b>
+                    {% endif %}
+                </p>
+                {% endif %}
+                <small style="margin-left: 10px;">({{ game["score"]}}) {{ game["time"] }} ({{ game["id"] }})</small>
+                <button onclick="location.href='/review/{{ game["id"] }}'">▶️</button>
+            </div>
+            {% endfor %}
+    </div>
+    
+        
+                    
+
+
+
         <button onclick="location.href='/'">Nazad</button>
     
 
     </body>
+    <script>document.addEventListener("DOMContentLoaded", () => {
+        const popupTrigger = document.querySelector(".name-and-elo small");
+        if (popupTrigger) {
+            popupTrigger.addEventListener("click", openPopup);
+            
+        }
+    });
+</script>
 </html>

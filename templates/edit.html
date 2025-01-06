@@ -3,9 +3,26 @@
 
 <head>
 
-    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
     <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Uredi profil</title>
+    <style>
+         @media (max-aspect-ratio: 1/1){
+        html
+    {
+      transform: scale(0.8);
+
+    }
+    .iinput{
+        width:80%;
+    }
+    .label{
+        
+    }
+}
+    </style>
 </head>
 
 <body>
@@ -13,16 +30,16 @@
     <div class="centered">
 
         <div class="profile-card">
-            <div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
 
                 <div class="profile-picture">
                     
                     <img id="picture" src="{{ url_for('showImage', username=session['user']) }}">
                     
                         <label class="overlay" for="profile-picture">Promijeni sliku</label>
-                   
+                        
                 </div>
-                <h2>{{ session["user"] }}</h2>
+                <h2 style="margin-right: 20px;">{{ session["user"] }}</h2>
             </div>
             <div class="marqueecontainer">
                 <form action="/editprofile" method="post">
@@ -35,30 +52,72 @@
                 <div class="name-and-elo">
                     <input type="checkbox" name="removeProfilePicture" id="removeP">
                     <label class="label" for="removeP">Makni sliku</label>
-                    <button type="submit">Potvrdi</button>
+                    <button id="confirm" type="submit">Potvrdi</button>
 
-                    <button type="button" onclick="history.back()">Nazad</button>
+                    <button id="cancel" type="button" onclick="history.back()">Nazad</button>
                 </div>
-            </form>
+
+            
                 
             
         </div>
 
-        </div>
-       
 
+</div>
+<div class="games-card" style="margin-top:20px; padding: 10px;">
+    <label for="theme">Tema</label>
+    <select name="theme">
+        <option value="dark" {% if session.get('theme', 'dark') == 'dark' %}selected="selected"{% endif %}>Tamna</option>
+        <option value="light" {% if session.get('theme') == 'light' %}selected="selected"{% endif %}>Svijetla</option>
+        <option value="pink" {% if session.get('theme') == 'pink' %}selected="selected"{% endif %}>Roza</option>
+        <option value="blue" {% if session.get('theme') == 'blue' %}selected="selected"{% endif %}>Plava</option>
+        
+    </select>
+</div>
+</form>
+{% if error %}
+<div class="error" style="margin-top:10px;">
+    {{ error }}
+</div>
+{% endif %}
         </div>
-        {% if error %}
-        <div class="error">
-            {{ error }}
-        </div>
-        {% endif %}
+
+
+
+
     </div>
 
 
 
 </body>
 <script>
+    document.querySelector('select[name="theme"]').addEventListener('change', function() {
+        const selectedTheme = this.value;
+        const stylesheetLink = document.querySelector('link[rel="stylesheet"]');
+        if (stylesheetLink) {
+            stylesheetLink.href = `/static/themes/${selectedTheme}.css`;
+        }
+    });
+      function updateButtons() {
+    const confirmButton = document.getElementById('confirm');
+    const cancelButton = document.getElementById('cancel');
+
+    if (window.matchMedia("(max-aspect-ratio: 1/1)").matches) {
+      // For narrow screens (portrait orientation)
+      confirmButton.innerHTML = "✔️"; // Emoji for Confirm
+      cancelButton.innerHTML = "❌"; // Emoji for Cancel or Return
+    } else {
+      // For wider screens (landscape orientation)
+      confirmButton.innerHTML = "Potvrdi";
+      cancelButton.innerHTML = "Nazad";
+    }
+  }
+
+  // Initial check and update
+  updateButtons();
+
+  // Update on screen resize
+  window.addEventListener('resize', updateButtons);
 document.getElementById('profile-picture').addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {

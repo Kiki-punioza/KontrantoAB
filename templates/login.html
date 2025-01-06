@@ -2,29 +2,37 @@
 <html>
     <head>
 
-    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
     <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prijava</title>
     </head>
-
+    
     <body>
         <form action="/auth" method="post">
         <div class="centered">
 
-        
-            <input name="username" placeholder="Ime" maxlength="24">
+            <img class="image" style="margin-bottom: 80px;" src="{{ url_for('static',filename='wordart.png') }}">
+            <input name="username" placeholder="Ime" maxlength="16">
+            
             <input name="password" type="password" placeholder="Lozinka">
+            <input type="hidden" name="timezone" id="timezone-input">
             <div>
-            <button name="action" value="register" type="submit">Registracija</button>
-            <button name="action" value="login" type="submit">Prijava</button>
+                <button name="action" value="login" type="submit">Prijava</button>
 
-            </div>
+
+            <button name="action" value="register" type="submit">Registracija</button>
+                        </div>
             <div style="display: flex; flex-direction: row;">
             <label class="label" style="margin-top:8px" for="eeula"><a href="/eula">Prihvaćam uvjete</a></label>
             <input type="checkbox" name="eula" id="eeula">
+            
         </div>
     </form>
-        <p>Molim Vas lijepo da zapamtite Vaš račun. Hvala na razumijevanju.</p>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+    <p>Molim Vas da zapamtite Vaš račun. Hvala.</p>
+</div>
         <button onclick="location.href='/'" type="button"> Nazad</button>
         {% if error %}
         <div class="error">
@@ -35,4 +43,14 @@
     
 
     </body>
+    <script>
+        // Get the browser's timezone using JavaScript
+        var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+        // Set the timezone value in the hidden input field
+        document.getElementById('timezone-input').value = timezone;
+    
+        // Submit the form
+        document.getElementById('timezone-form').submit();
+    </script>
 </html>

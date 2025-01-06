@@ -1,3 +1,4 @@
+
 .selection {
   display: flex;
   flex-direction: row;
@@ -16,14 +17,37 @@
     background-color: #222;
     box-sizing: border-box;
     
+    
+}
+
+
+.games-card{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  
+  border: 3px solid #333;
+  padding-left: 10px;
+  width: min(100vw, 450px);
+  max-width: none;
+  background-color: #222;
+  box-sizing: border-box;
+  
+}
+
+.games-cards{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .myExclusive {
-  background-color: #050;
+  background-color: #050 !important;
 }
 
 .theirExclusive {
-  background-color: #500;
+  background-color: #500 !important;
 }
 
 .profile-picture {
@@ -78,14 +102,27 @@
   outline: none;
 }
 body {
-    
-    margin: 0;
+  
+  margin: 0 auto;
+  padding: 0;
     background-color: #111;
     color: #aaa;
 }
+.footer {
+ display:flex;
+ justify-content: space-between;
+ position: fixed;
+bottom: 0;
+width: 100%;
+color:#222; 
 
+}
+.footer p {
+  margin: 0;
+  font-size: 80%;
+}
 .centered {
-    height: 100%;
+    
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -136,7 +173,7 @@ a {
 
 .formatted {
   
-  width: 40%;
+  width: 50%;
   min-width: 10px;
   text-align:justify;
 }
@@ -166,6 +203,7 @@ aaa {
   flex-grow: 1;
   margin-bottom: 65px;
   margin-top: 5px;
+  margin-left: 15px;
   top:0;
   flex: 0 auto;
 
@@ -255,50 +293,20 @@ label{
     cursor:pointer;
     
   }
-#gameGrid {
-    
-    display: grid;
-    grid-template-columns: repeat(7, 80px);
-    grid-template-rows: repeat(5, 80px);
-    gap: 4px;
-    margin: 20px auto;
-    grid-auto-flow: row;
-  }
+
 @media (max-aspect-ratio: 1/1){
-  .popup {
-    text-align: center;
-    display: none; /* Hidden by default */
-    position: fixed; /* Fixed position to stay in place */
-    top: 50%; /* Center vertically */
-    left: 50%; /* Center horizontally */
-    transform: translate(-50%, -50%); /* Adjust for center alignment */
-    z-index: 9999; /* Ensure it's above all other elements */
-    background-color: #222; /* Popup background */
-    padding: 20px; /* Padding for content */
-    width:66%;
-    max-width: 250px;
-    box-shadow: 0 80px 80px rgba(0, 0, 0, 0.2); /* Add some shadow */
-     /* Optional rounded corners */
-  }
+
   .edit{
     font-size: 15px;
     flex-grow: 1;
     margin-bottom: 5px;
     margin-top: 65px;
-    margin-right:10px;
+    margin-right:-50px;
     top:0;
     flex: 0 auto;
   
   }
-  #gameGrid {
-    display: grid;
-    grid-template-columns: repeat(5, 80px);
-    grid-template-rows: repeat(7, 80px);
-    gap: 4px;
-    margin: 20px auto;
-    grid-auto-flow: column;
-    
-  }
+
   .formatted {
     margin: 0 auto;
     width: 95%;

@@ -2,9 +2,10 @@
 <html>
     <head>
         <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <title>Čekate igru</title>
     </head>
 
     <body>
@@ -30,7 +31,7 @@
         <script>
         const socket = io();
         gameId = "{{ id }}";
-        socket.emit("awaitAdversary", {id:"{{ id }}"})
+        socket.emit("awaitAdversary", {id:"{{ id }}", isPrivate:"{{ isPrivate }}",user:"{{ session['user'] }}"});
         console.log("awaiting adversary");
         socket.on('matched', (data) => {
         console.log(data);

@@ -1,0 +1,373 @@
+
+.selection {
+    display: flex;
+    flex-direction: row;
+  }
+  
+  
+  
+  .profile-card {
+      display: flex;
+      align-items: flex-start;
+      align-items: center;
+      border: 3px solid #ffecf4;
+      padding: 20px;
+      width: min(100vw, 450px);
+      max-width: none;
+      background-color: #ffe3ef;
+      box-sizing: border-box;
+      
+      
+  }
+  
+  
+  .games-card{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    
+    border: 3px solid #ffecf4;
+    padding-left: 10px;
+    width: min(100vw, 450px);
+    max-width: none;
+    background-color: #ffe3ef;
+    box-sizing: border-box;
+    
+  }
+  
+  .games-cards{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .myExclusive {
+    background-color: #050 !important;
+  }
+  
+  .theirExclusive {
+    background-color: #500 !important;
+  }
+  
+  .profile-picture {
+    position: relative;
+      width: 100px;
+      height: 100px;
+      border: 3px solid #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 20px;
+  }
+  
+  .profile-details {
+         display: flex;
+      flex-direction: column; /* Stack children vertically */
+      align-items: flex-start; /* Align items to the left */
+  
+  }
+  
+  .profile-details h2 {
+      margin: 0 0 15px;
+      font-size: 25px;
+      line-height: 1;
+      
+  }
+  
+  .profile-details p {
+      
+      margin: 0;
+      margin-bottom: 50px;
+      
+  }
+  
+  .profile-stats {
+    gap: 15px;
+    display: flex;
+  }
+  .profile-actions button{
+    font-size: 20px;
+    display: flex;
+  }
+  
+  .marqueecontainer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    
+  
+  }
+  *:focus {
+    outline: none;
+  }
+  body {
+    
+    margin: 0 auto;
+    padding: 0;
+      background-color: #ffe2f9;
+      color: #222;
+  }
+  .footer {
+   display:flex;
+   justify-content: space-between;
+   position: fixed;
+  bottom: 0;
+  width: 100%;
+  color:#eee; 
+  
+  }
+  .footer p {
+    margin: 0;
+    font-size: 80%;
+  }
+  .centered {
+      
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+  
+  }
+  
+  h1{
+    font-size: 100px;
+  }
+  
+  .popup {
+    text-align: center;
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed position to stay in place */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for center alignment */
+    z-index: 9999; /* Ensure it's above all other elements */
+    background-color: #eee; /* Popup background */
+    padding: 20px; /* Padding for content */
+    box-shadow: 0 80px 80px rgba(0, 0, 0, 0.2); /* Add some shadow */
+     /* Optional rounded corners */
+  }
+  
+  .error {
+    background-color: #c00;
+    border: 1px solid #a00;
+    color: #e00;
+    font-size:20px;
+  }
+  
+  .image {
+      
+      min-width:350px;
+      max-width:350px;
+      height: auto;
+      
+      margin-bottom: 5%;
+      pointer-events: none;
+  }
+  
+  a {
+    color:black;
+  }
+  
+  .formatted {
+    
+    width: 50%;
+    min-width: 10px;
+    text-align:justify;
+  }
+  
+  .formatted p{
+    margin:25px;
+  }
+  
+  img{
+    pointer-events: none;
+  }
+  aaa {
+      margin: 1%;
+      text-align: center;
+      width: 100px;
+      font-size: 30px;
+      padding: 15px;
+      border: 2px solid #aaa;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #222;
+      background-color: #aaa;
+  }
+  
+  .edit{
+    font-size: 15px;
+    flex-grow: 1;
+    margin-bottom: 65px;
+    margin-top: 5px;
+    margin-left: 15px;
+    top:0;
+    flex: 0 auto;
+  
+  }
+  
+  .logout {
+    position:absolute;
+    top: 0;
+    right: 0;
+  }
+  
+  .name-and-elo{
+    display:flex;
+    flex-direction: row;
+  }
+  
+  
+  marquee {
+    
+      color: #aaa;
+      position: absolute;
+      bottom: 0;
+  }
+  
+  span {
+      margin-right: 33%;
+  }
+  .iinput{
+    flex:1;
+  }
+  
+  input,
+  button
+   {
+      margin: 10px;
+      padding: 8px;
+      font-size: 20px;
+      background-color: #dfcdd4;
+      color: #222;
+      border: 2px solid #ffecf4;
+      border-style:outset;
+  }
+  
+  .gameProfile{
+    border: 3px solid #ffecf4;
+   width: 80px; 
+  }
+  
+  
+  .overlay{
+    display:flex;
+    position: absolute;
+    top:0 ;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  .overlay:hover{
+    opacity: 1;
+    
+  }
+  .overlay label {
+    cursor: pointer;
+  }
+  label{
+    z-index: 9999;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .label{
+    display: flex;
+    margin-top: 22px;
+  }
+  .actionButton{
+      width: 80px;
+      height: 80px;
+      color: #222;
+      background-color: #ddd;
+      line-height: 1em;
+      padding: 0px;
+      font-size: 30px;
+      cursor:pointer;
+      
+    }
+  
+  @media (max-aspect-ratio: 1/1){
+  
+    .edit{
+      font-size: 15px;
+      flex-grow: 1;
+      margin-bottom: 5px;
+      margin-top: 65px;
+      margin-right:-50px;
+      top:0;
+      flex: 0 auto;
+    
+    }
+  
+    .formatted {
+      margin: 0 auto;
+      width: 95%;
+      min-width: 10px;
+      text-align:justify;
+    }
+    .image {
+  
+      width: 00%;
+     
+      margin-bottom: 5%;
+      pointer-events: none;
+  }
+    .centered{
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  }
+  
+    .piece{
+      pointer-events: auto;
+    }
+  
+    div.white{
+      background-color: pink;
+    }
+    div.black{
+      background-color: #6AABFF;
+    }
+  
+    .cell {
+      width: 80px;
+      height: 80px;
+      background-color: rgb(255, 211, 248);
+      box-sizing: border-box;
+      display:flex;
+      justify-content: center;
+      align-items: center;
+  
+    }
+  
+    .restricted-left {
+      background-color: #ddd;
+     
+    }
+  
+    .restricted-right {
+      background-color: #333;
+     
+    }
+  
+    .white-square {
+      background-color: #aaa;
+    }
+  
+    .black-square {
+      background-color: #404040;
+    }
+  
+    * {
+      -webkit-tap-highlight-color: transparent;
+  }

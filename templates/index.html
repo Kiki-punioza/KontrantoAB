@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html>
     <head>
+
+<title>Kontranto</title>
+<meta name="title" content="Kontranto" />
+<meta name="description" content="Predvidi i budi nepredvidiv." />
+
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kontranto.com/" />
+<meta property="og:title" content="Kontranto" />
+<meta property="og:description" content="Predvidi i budi nepredvidiv." />
+<meta property="og:image" content="https://kontranto.com/static/wordart.png" />
+
+
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://kontranto.com/" />
+<meta property="twitter:title" content="Kontranto" />
+<meta property="twitter:description" content="Predvidi i budi nepredvidiv." />
+<meta property="twitter:image" content="https://kontranto.com/static/wordart.png" />
+
+
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="{{ url_for('static',filename='styles.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
         <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
-        <title>Kontranto: Ali Bolje!</title>
+        
     </head>
     <body>
 
@@ -21,8 +42,13 @@
         <button onclick="location.href='/about'" type="button">Što je ovo?</button>
         <button onclick="location.href='/login'" type="button">Prijava</button>
         {% endif %}
-
+        
         </div>
+        <div class="footer">
+            <p>Ne zadržavaju se nikakva prava.</p>
+        <p>v 0.8.9 AB</p></div>
+    
+        
         
 
     </body>

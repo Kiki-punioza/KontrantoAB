@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+
+    <title>Igrač {{ username }}</title> 
+    <style>
+        .games-card{
+            justify-content: space-between;
+        }
+        .popup{
+            position: fixed; /* Ensures popup is relative to the viewport */
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+        }
+        .profile-card{
+            margin-top:50px;
+        }
+        .clickable {
+            cursor: pointer;
+            
+        }
+        .clickable:hover {
+            color: #777;
+        }
+        @media (max-aspect-ratio: 1/1){
+            .popup{
+            position: fixed; /* Ensures popup is relative to the viewport */
+top: 15%;
+left: 50%;
+transform: translate(-50%, -50%);
+box-shadow: 0 80px 80px rgba(0, 0, 0, 0.5);
+        }
+            .edit{margin-left: -80px;
+            margin-top:80px;}
+            .profile-card{
+            margin-top:00px;
+        }
+html
+{
+
+transform: scale(0.9);
+}
+}
+    </style>
+    </head>
+    <script>
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+        function openPopup() {
+            document.getElementById("popup").style.display = "block";
+
+        }
+    </script>
+    <body>
+        <div id="popup" class="popup">
+            <h2 id="gameOverText">O bodovanju</h2>
+            <p id="descriptionText">kontranto.com određuje bodove igrača od 0-36.</p>
+            <p id="descriptionText">Vaše bodove čini prosjek razlika bodova Vaših najnovijih {{ firstN }} igara plus osamnaest (18) .</p>
+            <button onclick="closePopup()">U redu</button>
+          </div>
+
+        <br>
+       <div class="centered"> 
+        <div class="games-cards">
+
+        {% for user in leaderboard %}
+        <div class="games-card">
+            
+                <p>{{ user.username }}: {{ user.points }} 
+                    <p>Zauzeo: {{ user.cummulative }}<p><p> Igre: {{ user.games }}</p>
+            </div>  
+        {% endfor %}
+
+        
+    </div>
+    
+        
+                    
+
+
+
+        <button onclick="location.href='/'">Nazad</button>
+    </div>
+
+    </body>
+    <script>document.addEventListener("DOMContentLoaded", () => {
+        const popupTrigger = document.querySelector(".name-and-elo small");
+        if (popupTrigger) {
+            popupTrigger.addEventListener("click", openPopup);
+            
+        }
+    });
+</script>
+</html>

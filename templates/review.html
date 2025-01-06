@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+  <meta property="og:type" content="website" />
+<meta property="og:url" content="https://kontranto.com/" />
+<meta property="og:title" content="Kontranto" />
+<meta property="og:description" content="Pregled igre {{ id }}" />
+<meta property="og:image" content="https://kontranto.com/reviewimage/{{ id }}" />
+<meta property="twitter:image" content="https://kontranto.com/reviewimage/{{ id }}" />
+
+  <title>Pregled igre {{ id }}</title>
+  <style>
+    #gameGrid {
+
+display: grid;
+  direction: ltr;
+  grid-template-columns: repeat(7, 80px);
+  grid-template-rows: repeat(5, 80px);
+  gap: 4px;
+  margin: 20px auto;
+  grid-auto-flow: row;
+  
+
+  
+}
+    svg{
+      cursor: pointer;
+    }
+    @media (max-aspect-ratio: 1/1){
+    html
+{
+  transform: scale(0.8);
+}
+#gameGrid {
+
+  display: grid;
+    direction: rtl;
+    grid-template-columns: repeat(5, 80px);
+    grid-template-rows: repeat(7, 80px);
+    gap: 4px;
+    margin: 20px auto;
+    grid-auto-flow: column;
+    
+  
+    
+  }
+    }
+  </style>
+ 
+</head>
+<body>
+    <div class="centered" style="max-width: 100%;   width: 100vw;
+    height: 100vh;">
+          <div style="text-align: center;">
+  
+          <div style="display:flex;width:100%;justify-content: space-between;"> 
+            <div style="display:flex; ">
+      
+              <img class="gameProfile" src="/image/{{ white }}">
+              </div>
+              <div style="margin-left: 5px; flex:1; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+                <p style="margin: 0" id="whitePlayer">{{ white }}</p>        
+                <p style="margin: 0" id="false">0:00</p>
+           </div>
+              
+      
+      <div style=" flex:1;">
+  <p style="margin-top: 0px;margin-bottom: 5px;" id="gameTitle">{{ id }}</p>
+  <h2 id="scoreboard" style="margin-bottom: 0;margin-top: 5px;">0 - 0</h2>
+  <p style="margin-top: 0px;margin-bottom: 0px;" id="moveCounter">Potez: 1</p>
+      </div>      
+  
+            
+            
+                  <div style="flex:1;margin-right: 5px; display:flex;flex-direction: column;align-items: center;justify-content: center;">
+                <p style="margin: 0" id="blackPlayer">{{ black }}</p>        
+                <p style="margin: 0" id="true">0:00</p>
+           </div>
+  
+           <div>
+              <img class="gameProfile" src="/image/{{ black }}">
+  
+              
+      </div>
+            </div>
+         <div id="gameGrid"></div>
+         <div id="initialPieces" style="display:flex;width:100%;justify-content: center; gap:10px;"></div>
+         </div>
+         <div style="display: flex;flex-direction: row;gap: 11px;">
+
+            <button class="actionButton" id="back" style="float:left;">⏪</button>
+          
+            <button class="actionButton" id="left" style="float:right;">◀️</button>
+            
+            <button class="actionButton" id="forward" style="float:left;">▶️</button>
+          
+            <button class="actionButton" id="right" style="float:right">⏩</button>
+
+        </div>
+        <button onclick="history.back()" type="button"> Nazad</button>
+</body>
+<script 
+src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
+integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+crossorigin="anonymous">
+</script>
+<script>
+ myColor = "{{ session['theme'] }}";
+      if (myColor == "dark" || myColor == "light"){
+        whiteColor = "white";
+        blackColor = "black";
+      }
+      else{
+        whiteColor = "pink";
+        blackColor = "#6AABFF";
+      }
+      
+
+      const  K  =   `
+  <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="38" cy="38" r="35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+
+    `
+      const T =   `
+  <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+    `
+
+      const  k  =   `
+  <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="38" cy="38" r="35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+
+    `
+      const t =   `
+
+
+  <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+    `
+
+      const kK = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+  <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+</div>
+      `
+      const kT = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+</div>
+      `
+    const tK = `
+    <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+
+</div>
+    `
+    const tT = `
+    <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+
+</div>
+
+    `
+    function formatTime(seconds) {
+        //console.log(seconds);
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      //ovo je NaN
+      //molim lijepo popravi
+      //console.log(`${minutes}:${remainingSeconds}`);
+
+      return `${String(minutes).padStart(1, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+lookupTable = {
+    "k": k,
+    "t": t,
+    "K": K,
+    "T": T,
+    "kK": kK,
+    "kT": kT,
+    "tK": tK,
+    "tT": tT,
+
+
+}
+currentMove = 1;
+
+moves = {{ moves | tojson | safe }};
+console.log(moves);
+times = {{ times | tojson | safe }}; 
+console.log(times);
+whiteSpaces = {{ whiteSpaces | tojson | safe }};
+console.log(whiteSpaces);
+blackSpaces = {{ blackSpaces | tojson | safe }};
+console.log(blackSpaces);
+whiteTime = document.getElementById("false");
+blackTime = document.getElementById("true");
+setToMove = function(move){
+    console.log("SAD IDE")
+    console.log(whiteSpaces[move-1]);
+    if(whiteSpaces[move-1] === undefined){
+        return false;
+    }
+    for (let i = 0; i < 35; i++){
+        document.getElementById(i).innerHTML = "";
+        document.getElementById(i).classList.remove("white");
+        document.getElementById(i).classList.remove("black");
+
+    }
+
+    playerMoves = moves[move];
+    pieces = {};
+    for (let i = 0; i < 4; i++){
+        if (i < 2){
+            pieces[playerMoves[0][i]] = (pieces[playerMoves[0][i]] || "") + "k";
+            
+        }
+        else{
+            pieces[playerMoves[0][i]] = (pieces[playerMoves[0][i]] || "") + "t";
+            
+        }
+        
+    }
+    for (let i = 0; i < 4; i++){
+        if (i < 2){
+            
+            pieces[playerMoves[1][i]] = (pieces[playerMoves[1][i]] || "") + "K";
+        }
+        else{
+            
+            pieces[playerMoves[1][i]] = (pieces[playerMoves[1][i]] || "") + "T";
+        }
+        
+    }
+    console.log(`PIECES JE pieces`);
+    console.log(pieces);
+    //for every piece in pieces, set the innerHTML of the corresponding cell to the piece
+    white = [];
+    black = [];
+    wTime = 0;
+    bTime = 0;
+    for (let i = 0; i < move; i++){
+        if (times[i][0]){
+            //round first to seconds from ms
+            wTime += Math.round(times[i][0]/1000);
+        }
+        if (times[i][1]){
+            bTime += Math.round(times[i][1]/1000);
+        }
+        
+        if (whiteSpaces[i][1] != []){
+            whiteSpaces[i][1].forEach(element => {
+                white.push(element);
+                
+            });
+        }
+        if (blackSpaces[i][1] != []){
+            blackSpaces[i][1].forEach(element => {
+                black.push(element);
+                
+            });
+        }
+    }
+    whiteTime.innerHTML = formatTime(wTime);
+    blackTime.innerHTML = formatTime(bTime);
+
+    white.forEach(element => {
+        document.getElementById(element).classList.add("white");
+        
+    });
+    black.forEach(element => {
+        document.getElementById(element).classList.add("black");
+        
+    });
+    document.getElementById("scoreboard").innerHTML = white.length + " - " + black.length;
+    for (let i = 0; i < 35; i++){
+        if (pieces[i]){
+            console.log(pieces[i]);
+            lookupElement = pieces[i];
+            console.log(`${lookupElement} JE TAJ`);
+            document.getElementById(i).innerHTML = lookupTable[lookupElement];
+        }
+        else{
+            document.getElementById(i).innerHTML = "";
+        }
+    }
+}
+gridDisplay = document.getElementById("gameGrid");
+moveCounter = document.getElementById("moveCounter");
+whiteTime = document.getElementById("false");
+blackTime = document.getElementById("true");
+  for (let i = 0; i < 35; i++) {
+      
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      cell.id = ''+i;
+
+
+
+      gridDisplay.appendChild(cell);
+    
+
+  }
+setToMove(currentMove);
+document.getElementById("left").addEventListener("click", function(){
+    if (currentMove > 1){
+        currentMove--;
+        setToMove(currentMove);
+        moveCounter.innerHTML = "Potez: " + currentMove;
+    }
+})
+document.getElementById("forward").addEventListener("click", function(){
+    if (currentMove < moves.length){
+        if(setToMove(currentMove+1) == false){
+            currentMove = whiteSpaces.length;
+            setToMove(currentMove);
+        }
+        else{
+            currentMove++;
+            setToMove(currentMove);
+        }
+        
+
+        moveCounter.innerHTML = "Potez: " + currentMove;
+    }
+})
+document.getElementById("back").addEventListener("click", function(){
+    if (currentMove > 1){
+        currentMove = 1;
+        setToMove(currentMove);
+        moveCounter.innerHTML = "Potez: " + currentMove;
+    }
+})
+document.getElementById("right").addEventListener("click", function(){
+    if (currentMove < moves.length && moves[currentMove] != [[], []]){
+        
+        if(setToMove(moves.length) == false){
+            currentMove = whiteSpaces.length;
+            setToMove(currentMove);
+        }
+        else{
+            currentMove = moves.length;
+        }
+
+        moveCounter.innerHTML = "Potez: " + currentMove;
+    }
+})
+
+</script>
