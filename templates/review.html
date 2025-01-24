@@ -111,7 +111,7 @@ integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q
 crossorigin="anonymous">
 </script>
 <script>
- myColor = "{{ session['theme'] }}";
+myColor = "{{ session['theme'] if 'theme' in session else 'dark' }}";
       if (myColor == "dark" || myColor == "light"){
         whiteColor = "white";
         blackColor = "black";
@@ -158,6 +158,71 @@ crossorigin="anonymous">
 </svg>
 </div>
       `
+      const kk = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+</div>
+      `
+      const kt = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+  <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+</div>
+      `
+      const tt = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+  <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+</div>
+      `
+      const KK = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+</div>
+      `
+      const KT = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+  <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+</div>
+      `
+      const TT = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+  <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+</div>
+      `
+
+
+
+
+
       const kT = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
@@ -210,10 +275,17 @@ lookupTable = {
     "kT": kT,
     "tK": tK,
     "tT": tT,
+    "kk": kk,
+    "kt": kt,
+    "tt": tt,
+    "KK": KK,
+    "KT": KT,
+    "TT": TT
 
 
 }
 currentMove = 1;
+
 
 moves = {{ moves | tojson | safe }};
 console.log(moves);
@@ -269,6 +341,7 @@ setToMove = function(move){
     black = [];
     wTime = 0;
     bTime = 0;
+
     for (let i = 0; i < move; i++){
         if (times[i][0]){
             //round first to seconds from ms
@@ -291,6 +364,14 @@ setToMove = function(move){
             });
         }
     }
+    if (isNaN(wTime)) {
+      wTime = bTime;
+    }
+    if (isNaN(bTime)) {
+      bTime = wTime;
+    }
+    console.log(`WTIME JE ${wTime} Ž`);
+    console.log(`BTIME JE ${bTime} Ž`);
     whiteTime.innerHTML = formatTime(wTime);
     blackTime.innerHTML = formatTime(bTime);
 

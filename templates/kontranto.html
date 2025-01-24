@@ -307,6 +307,71 @@ display: grid;
 </svg>
 </div>
       `
+      const kk = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+</div>
+      `
+      const kt = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+   <circle cx="19" cy="19" r="17" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+</svg>
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+</div>
+      `
+      const tt = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+  <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+  </svg>
+</div>
+      `
+      const KK = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+</div>
+      `
+      const KT = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+<svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
+    <circle cx="19" cy="19" r="17" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+</svg>
+  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+</div>
+      `
+      const TT = `
+      <div style="display: flex; justify-content: center; align-content: center;">
+  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>  
+  <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
+    <polygon points="19,3 35,35 3,35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+  </svg>
+</div>
+      `
+
+
+
+
+
       const kT = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
@@ -317,7 +382,7 @@ display: grid;
   </svg>
 </div>
       `
-    const tK = `
+    const Kt = `
     <div style="display: flex; justify-content: center; align-content: center;">
   <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
     <polygon points="19,3 35,35 3,35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
@@ -497,6 +562,14 @@ myExclusive = undefined;
 
                   
                   element.addEventListener("click", (event) => { 
+
+                  if (selectedElement) {
+                    const cellBelow = element.closest(".cell");
+                    if (cellBelow) {
+                      cellBelow.click();
+                      return;
+                    }
+                  }
           
                     if(element.closest(".cell").classList.contains("myExclusive")){
 
@@ -559,11 +632,12 @@ myExclusive = undefined;
                           selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>', "");
                           selectedElement = undefined;
                           selectedPiece = undefined;
+                          selectedIndex = undefined;
                           clearSelections();
                         }
                       }
                     });
-                    if (selectedElement && !element.classList.contains(isBlack ? "black" : "white")) {
+                    if (selectedElement && !element.classList.contains(isBlack ? "black" : "white") && 0) {
                       return; // Do nothing if an element is already selected or if the clicked piece is not my color
                     }
                     event.stopPropagation()
@@ -585,6 +659,7 @@ myExclusive = undefined;
             selectedElement = element;
             selectedPiece = element.id;
             selectedId = element.closest(".cell").id;
+            selectedIndex = element.getAttribute("index");
             element.innerHTML = '<rect width="76" height="76" fill="#ef9"></rect>'+element.innerHTML;
             console.log(element.id);
             console.log(selectedId);
@@ -625,17 +700,23 @@ for (let index = 0; index < 4; index++) {
     let position = moves[+isBlack][index];
     if (position !== -1) {
         let parentDiv = document.getElementById(position.toString());
-        let targetSvg = parentDiv.querySelector(isBlack ? "svg.black" : "svg.white");
+        pieceType = index < 2 ? "circle" : "triangle";
+        console.log(`PIECE TYPE JE ${pieceType}`);
+        let targetSvg = parentDiv.querySelector(`svg.${isBlack ? "black" : "white"}#${pieceType}[index="${selectedIndex}"]`);
+        console.log("OVO TU JE TARGET SVG");
+        console.log(targetSvg);
+        console.log(`SELECTED INDEX JE ${selectedIndex}`);
         if (targetSvg) {
             indexAttributes[position] = targetSvg.getAttribute("index");
         }
     }
 }
                   if (movesOfPieces[+selectedElement.getAttribute("index")].includes(element.id)){
-                    console.log(moves[+isBlack]);
+                    console.log(`MOVES SBLACK JE ${moves[+isBlack]} A ELEMENT JE ${element.id} A PIECE JE ${selectedPiece}`);
                     let oldPosition = selectedId.toString();
                     let newPosition = element.id;
-                    moves[+isBlack][moves[+isBlack].indexOf(oldPosition)] = newPosition;
+                    console.log(`znači mičemo se od ${oldPosition} do ${newPosition} sa ${selectedPiece}`);
+                    moves[+isBlack][+selectedIndex] = newPosition;
                     // Step 3: Update the indexAttributes with the new positions
             if (indexAttributes[oldPosition]) {
                 indexAttributes[newPosition] = indexAttributes[oldPosition];
@@ -650,6 +731,7 @@ for (let index = 0; index < 4; index++) {
                     selectedElement.innerHTML = selectedElement.innerHTML.replace('<rect width="76" height="76" fill="#ef9"></rect>',"");
                     selectedElement = undefined;
                     selectedPiece = undefined;
+                    selectedIndex = undefined;
                   
                    
                     updateBoard();
@@ -669,13 +751,18 @@ for (let index = 0; index < 4; index++) {
 attachListeners();
             }, 0);
                     for (let index = 0; index < 4; index++) {
+                      
     let position = moves[+isBlack][index];
     if (position !== -1) {
         let parentDiv = document.getElementById(position.toString());
-        let targetSvg = parentDiv.querySelector(isBlack ? "svg.black" : "svg.white");
-        if (targetSvg && indexAttributes[position]) {
-            targetSvg.setAttribute("index", indexAttributes[position]);
+        pieceType = index < 2 ? "circle" : "triangle";
+        //get the element with the id of the pieceType and class of the color
+        let targetSvg = parentDiv.querySelector(`svg.${isBlack ? "black" : "white"}#${pieceType}:not([index])`);
+
+        if (targetSvg && !targetSvg.getAttribute("index")) {
+            targetSvg.setAttribute("index", index);
         }
+
     }
 }
                     
@@ -1089,31 +1176,41 @@ attachListeners();
               console.log("gledam")
               let position = moves[+isBlack][i];
               if (position !== -1 && position !== -2) {
-                let cell = document.getElementById(position.toString());
-                console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
-                if (cell.querySelectorAll(".piece").length > 1) {
-                  let allowedMoves = computeAllowedMoves(position);
-                  if (allowedMoves.length ==0){
-                    console.log(`nema ih ${position}`);
-                    moves[+isBlack][i] = -1;
+              let cell = document.getElementById(position.toString());
+              console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
+              if (cell.querySelectorAll(".piece").length > 1) {
+                let allowedMoves = computeAllowedMoves(position);
+                if (allowedMoves.length == 0) {
+                console.log(`nema ih ${position}`);
+                moves[+isBlack][i] = -1;
+                }
+                
+                let onlyMoveIntoSameColor = allowedMoves.every(move => {
+                let targetCell = document.getElementById(move);
+                return targetCell.querySelector(isBlack ? ".black" : ".white");
+                });
+                if (onlyMoveIntoSameColor) {
+                posIAmMovingInto = allowedMoves[0];
+                movesFromThePosIAmMovingInto = computeAllowedMoves(posIAmMovingInto);
+                
+                // Subtract the squares others have to move in from the moves from the position I am moving into
+                for (let j = 0; j < 4; j++) {
+                  if (j !== i) {
+                  let otherPosition = moves[+isBlack][j];
+                  if (otherPosition !== -1 && otherPosition !== -2) {
+                    let otherAllowedMoves = computeAllowedMoves(otherPosition);
+                    movesFromThePosIAmMovingInto = movesFromThePosIAmMovingInto.filter(move => !otherAllowedMoves.includes(move));
                   }
-                 
-                    
-                  let onlyMoveIntoSameColor = allowedMoves.every(move => {
-                    let targetCell = document.getElementById(move);
-                    return targetCell.querySelector(isBlack ? ".black" : ".white");
-                  });
-                  if (onlyMoveIntoSameColor) {
-                    posIAmMovingInto = allowedMoves[0];
-                    movesFromThePosIAmMovingInto = computeAllowedMoves(posIAmMovingInto);
-                    if (movesFromThePosIAmMovingInto.length == 1) {
-                    moves[+isBlack][i] = -1;
-                  }
-                  }
-                  else{
-                    console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
                   }
                 }
+
+                if (movesFromThePosIAmMovingInto.length <= 1) {
+                  moves[+isBlack][i] = -1;
+                }
+                } else {
+                console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
+                }
+              }
               }
             }
             updateBoard();
@@ -1246,18 +1343,22 @@ attachListeners();
 
 
         lookupTable = {
-          "k": k,
-          "t": t,
-          "K": K,
-          "T": T,
-          "kK": kK,
-          "kT": kT,
-          "tK": tK,
-          "tT": tT,
-
-          
-          
-        }
+    "k": k,
+    "t": t,
+    "K": K,
+    "T": T,
+    "kK": kK,
+    "kT": kT,
+    "Kt": Kt,
+    "tK": Kt,
+    "tT": tT,
+    "kk": kk,
+    "kt": kt,
+    "tt": tt,
+    "KK": KK,
+    "KT": KT,
+    "TT": TT
+}
 
         for (i = 0; i < 35; i++){
           document.getElementById(i.toString()).innerHTML = "";
@@ -1326,7 +1427,7 @@ else{
     }
 
       for (id in result){
-        if (["kk","tt","KT","TK"].includes(result[id])) {
+        if (["kk","tt","kt","KK","TT","KT"].includes(result[id])) {
           console.log("SAD NEĆU ENABLEAT ZATO ŠTO SI STAVIO SVOJA DVA NA JEDNO TE ISTO MJESTO");
     shouldEnable = false;
 }
@@ -1401,6 +1502,7 @@ else{
           selectedElement.remove();
           selectedElement = undefined;
           selectedPiece = undefined;
+          selectedIndex = undefined;
           }
         });
       });

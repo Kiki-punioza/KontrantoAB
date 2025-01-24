@@ -3,7 +3,7 @@ import pytz
 from flask import Flask, render_template,redirect,request, session, url_for, abort, send_file # type: ignore
 from flask_mysqldb import MySQL # type: ignore
 from werkzeug.security import generate_password_hash, check_password_hash # type: ignore
-from random import randint
+from random import randint, uniform
 from flask_socketio import SocketIO, emit, join_room, leave_room # type: ignore
 import io
 import base64
@@ -15,12 +15,7 @@ import json
 import time
 import numpy as np
 from scipy.ndimage import label # type: ignore
-import copy
 import math
-from itertools import product
-from functools import wraps
-from multiprocessing import Pool, cpu_count
-from re import search
 from collections import defaultdict
 import threading
 import traceback
@@ -30,6 +25,103 @@ lock_for_create = threading.Lock()
 fiirstN = 20
 import random, math
 from typing import List
+
+from math import inf
+
+class Board:
+    """Initalizes the board for the selected parameters. 
+    
+        The structure of the parameters is:
+        spaces: a list of taken spaces, color is irrelevant
+        pieces: a list of two lists for each player's pieces.
+          The first two elements represent the position of the respected player's circles, and the last two are for the triangles.
+            If an element is -1, that piece is no longer on the board.
+        
+    """
+    def __init__(self, spaces, pieces):
+        self.spaces = spaces
+        self.pieces = pieces
+
+
+def areUnique(a, b, c, d):
+    """Check if the given four numbers (moves) are unique."""
+    nums = [a, b, c, d]
+    unique_nums = {x for x in nums if x != -1}  
+    return len(unique_nums) == len([x for x in nums if x != -1])
+
+def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 3, attackedSpaceValue:int = 8, randValue:int = 1, distanceFactor:int = 0,doSorting:bool = True):
+    """Sorted per piece heuristics
+
+    Args:
+        board: The board to evaluate as a Board object
+        maximizingPlayer: The player to maximize, "white" or "black"
+        unnatackedSpaceValue: Value of an unnatacked space. 
+        attackedSpaceValue: Value of an attacked space. 
+        randValue: Random value. 
+        distanceFactor: Distance factor. Defaults to not considering distance.
+        doSorting: Whether to sort the moves.
+    """
+    
+    if board is None:
+        numbers = list(range(35))
+        unavailable = [int(a) for a in ["7", "8", "9", "14", "15", "16", "21", "22", "23"]] if maximizingPlayer == "black" else [int(a) for a in ["11", "12", "13", "18", "19", "20", "25", "26", "27"]]
+        
+
+        move = sample([a for a in numbers if a not in unavailable], 4)
+        return move
+            #blackMove = firstMove[1]
+    moves = generateMoves(board)
+    polarity = 1 if maximizingPlayer == "white" else -1
+    maximizingPlayer = 0 if maximizingPlayer == "white" else 1
+    bestMoves = []
+    movesToCheck = {0:[],1:[],2:[],3:[]}
+    distances = []
+    for moveIndex in range(4):
+        moveScore = -inf
+        bestMove = -1
+        for move in moves[maximizingPlayer][moveIndex]:
+            if move != -1:
+                
+                currentMoveScore = 0
+                
+                otherPlayer = 1 - maximizingPlayer
+                for otherMoveIndex in range(4):
+                    if move not in moves[otherPlayer][otherMoveIndex]:
+                        currentMoveScore += unnatackedSpaceValue+round(uniform(-randValue,randValue),2)
+                        
+                    for otherMove in moves[otherPlayer][otherMoveIndex]:
+                        if (move == otherMove and ((moveIndex < 2 and otherMoveIndex < 2) or (moveIndex >= 2 and otherMoveIndex >= 2))):
+                            currentMoveScore += (attackedSpaceValue+round(uniform(-randValue,randValue),2))*polarity
+                        if (move == otherMove and ((moveIndex < 2 and otherMoveIndex >= 2) or (moveIndex >= 2 and otherMoveIndex < 2))):
+                            currentMoveScore -= (attackedSpaceValue+round(uniform(-randValue,randValue),2))*polarity
+                        if doSorting: movesToCheck[moveIndex].append([move,currentMoveScore])          
+                        else:
+                            if currentMoveScore > moveScore:
+                                moveScore = currentMoveScore
+                                bestMove = move
+                        if not doSorting: bestMoves.append(bestMove)
+    if doSorting:
+        all_moves = []
+        for piece_index, moves_list in movesToCheck.items():
+            for move, score in moves_list:
+                all_moves.append((piece_index, move, score))
+
+
+        sorted_moves = sorted(all_moves, key=lambda x: x[2], reverse=True)
+
+        selected_moves = {}
+        taken_squares = set()
+
+        for piece, move, score in sorted_moves:
+            if piece not in selected_moves and move not in taken_squares:
+                selected_moves[piece] = move
+                taken_squares.add(move)
+
+        bestMoves = []
+        for i in range(4):
+            bestMoves.append(selected_moves.get(i, -1))    
+
+    return bestMoves
 
 
 def get_game_lock(game_id):
@@ -58,272 +150,6 @@ TRIANGLE = 'triangle'
 EMPTY = None
 INACTIVE = 'inactive'
 
-def pos_to_coords(pos):
-    """Converts a position to (x, y) coordinates."""
-    x = pos // COLS
-    y = pos % COLS
-    return x, y
-
-def coords_to_pos(x, y):
-    """Converts (x, y) coordinates to a position."""
-    return x * COLS + y
-
-class GameState:
-    """Represents the state of the game."""
-    def __init__(self, my_color, opponent_color, my_pieces, opponent_pieces, inactive_squares, my_score, opponent_score, is_overtime=False):
-        self.my_color = my_color  # 'white' or 'black'
-        self.opponent_color = opponent_color
-        self.my_pieces = my_pieces  # {'circle': [pos1, pos2], 'triangle': [pos1, pos2]}
-        self.opponent_pieces = opponent_pieces
-        self.inactive_squares = set(inactive_squares)  # Set of positions
-        self.my_score = my_score
-        self.opponent_score = opponent_score
-        self.is_overtime = is_overtime  # Boolean flag for overtime
-
-    def is_terminal(self):
-        # Check for win conditions
-        if self.my_score >= 18 or self.opponent_score >= 18:
-            return True
-        if not self.has_moves():
-            return True
-        return False
-
-    def has_moves(self):
-        # Check if there are valid moves left
-        for piece_type in [CIRCLE, TRIANGLE]:
-            for pos in self.my_pieces[piece_type]:
-                if pos == -1:
-                    continue
-                if self.get_valid_moves(pos):
-                    return True
-        return False
-
-    def get_valid_moves(self, pos):
-        moves = []
-        x, y = pos_to_coords(pos)
-        for dx, dy in DIRECTIONS:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < ROWS and 0 <= ny < COLS:
-                n_pos = coords_to_pos(nx, ny)
-                if n_pos in self.inactive_squares:
-                    continue
-                if n_pos in self.get_all_my_piece_positions(): #or n_pos in self.get_all_opponent_piece_positions():
-                    continue
-                moves.append(n_pos)
-        return moves
-
-    def get_all_my_piece_positions(self):
-        positions = []
-        for piece_list in self.my_pieces.values():
-            positions.extend([pos for pos in piece_list if pos != -1])
-        return positions
-
-    def get_all_opponent_piece_positions(self):
-        positions = []
-        for piece_list in self.opponent_pieces.values():
-            positions.extend([pos for pos in piece_list if pos != -1])
-        return positions
-
-    def apply_move(self, my_move, opponent_move):
-        """
-        Applies both my_move and opponent_move to the current state to produce a new state.
-        If my_move or opponent_move is None, it means that player does not change their positions.
-        """
-        new_state = copy.deepcopy(self)
-
-        # Update my_pieces if my_move is provided
-        if my_move is not None:
-            new_state.my_pieces = my_move
-
-        # Update opponent_pieces if opponent_move is provided
-        if opponent_move is not None:
-            new_state.opponent_pieces = opponent_move
-
-        # Resolve collisions
-        collisions = {}
-        my_positions = {}
-        for piece_type in [CIRCLE, TRIANGLE]:
-            for idx, pos in enumerate(new_state.my_pieces[piece_type]):
-                if pos == -1:
-                    continue
-                my_positions[pos] = (piece_type, idx)
-
-        opponent_positions = {}
-        for piece_type in [CIRCLE, TRIANGLE]:
-            for idx, pos in enumerate(new_state.opponent_pieces[piece_type]):
-                if pos == -1:
-                    continue
-                opponent_positions[pos] = (piece_type, idx)
-
-        # Check for collisions
-        collided_positions = set(my_positions.keys()) & set(opponent_positions.keys())
-        for pos in collided_positions:
-            my_piece_type, my_idx = my_positions[pos]
-            opp_piece_type, opp_idx = opponent_positions[pos]
-
-            # Determine collision outcome
-            if my_piece_type == opp_piece_type:
-                # Square colored as White
-                winner_color = 'white'
-            else:
-                # Square colored as Black
-                winner_color = 'black'
-
-            new_state.inactive_squares.add(pos)
-
-            # Update scores
-            if winner_color == self.my_color:
-                new_state.my_score += 1
-            else:
-                new_state.opponent_score += 1
-
-            # Remove pieces (they cannot move anymore)
-            #new_state.my_pieces[my_piece_type][my_idx] = -1
-            #new_state.opponent_pieces[opp_piece_type][opp_idx] = -1
-
-        return new_state
-
-    # Ensuring the GameState is picklable for multiprocessing
-    def __getstate__(self):
-        return self.__dict__
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-
-
-def expectimax(state, depth, maximizing_player):
-    if depth == 0 or state.is_terminal():
-        return evaluate_state(state)
-
-    if maximizing_player:
-        max_eval = -math.inf
-        my_moves = generate_all_moves(state, state.my_pieces)
-        for my_move in my_moves:
-            exp_value = 0
-            opponent_moves = generate_all_moves(state, state.opponent_pieces)
-            if not opponent_moves:
-                # If opponent has no moves, treat as terminal
-                next_state = state.apply_move(my_move, None)
-                eval = expectimax(next_state, depth - 1, False)
-                exp_value += eval
-            else:
-                prob = 1 / len(opponent_moves)
-                for opp_move in opponent_moves:
-                    next_state = state.apply_move(my_move, opp_move)
-                    eval = expectimax(next_state, depth - 1, False)
-                    exp_value += prob * eval
-            if exp_value > max_eval:
-                max_eval = exp_value
-        return max_eval
-    else:
-        # Expected value over opponent's possible moves
-        exp_value = 0
-        opponent_moves = generate_all_moves(state, state.opponent_pieces)
-        if not opponent_moves:
-            # If opponent has no moves, treat as terminal
-            next_state = state.apply_move(None, None)
-            eval = expectimax(next_state, depth - 1, True)
-            exp_value += eval
-        else:
-            prob = 1 / len(opponent_moves)
-            for opp_move in opponent_moves:
-                next_state = state.apply_move(None, opp_move)
-                eval = expectimax(next_state, depth - 1, True)
-                exp_value += prob * eval
-        return exp_value
-
-
-def generate_all_moves(state, pieces):
-    moves_list = []
-    piece_types = [CIRCLE, TRIANGLE]
-    moves_per_piece = {}
-    for piece_type in piece_types:
-        moves_per_piece[piece_type] = []
-        for idx, pos in enumerate(pieces[piece_type]):
-            if pos == -1:
-                moves_per_piece[piece_type].append([-1])
-                continue
-            valid_moves = state.get_valid_moves(pos)
-            if valid_moves:
-                # To limit the branching factor, consider only the best moves based on a heuristic
-                # For simplicity, we can shuffle and take the first few moves
-                # Select three random moves from the valid moves
-                random.shuffle(valid_moves)
-
-                moves_per_piece[piece_type].append(valid_moves[:3])  # Consider up to 3 moves per piece
-            else:
-                # If no valid moves, the piece must stay in place
-                moves_per_piece[piece_type].append([pos])
-
-    # Generate all combinations of moves
-    all_moves = []
-    circle_moves = list(product(*moves_per_piece[CIRCLE]))
-    triangle_moves = list(product(*moves_per_piece[TRIANGLE]))
-    for c_move in circle_moves:
-        for t_move in triangle_moves:
-            # Combine all move positions
-            move_positions = list(c_move) + list(t_move)
-            # Exclude inactive positions (-1) from overlap checks
-            active_positions = [p for p in move_positions if p != -1]
-            # Check for overlapping positions within the player's own pieces
-            if len(active_positions) != len(set(active_positions)):
-                continue  # Overlapping detected, skip this move
-
-            move = {
-                CIRCLE: list(c_move),
-                TRIANGLE: list(t_move)
-            }
-            all_moves.append(move)
-    return all_moves
-
-def evaluate_state(state):
-    # Simple evaluation function: score difference
-    return state.my_score - state.opponent_score
-
-def evaluate_move(args):
-    """Helper function for multiprocessing to evaluate a move."""
-    my_move, state, depth = args
-    exp_value = 0
-    opponent_moves = generate_all_moves(state, state.opponent_pieces)
-
-    if not opponent_moves:
-        # If opponent has no moves, evaluate the state after my_move
-        next_state = state.apply_move(my_move, None)
-        eval = expectimax(next_state, depth - 1, False)
-        exp_value += eval
-    else:
-        prob = 1 / len(opponent_moves)
-        for opp_move in opponent_moves:
-            next_state = state.apply_move(my_move, opp_move)
-            eval = expectimax(next_state, depth - 1, False)
-            exp_value += prob * eval
-    return (exp_value, my_move)
-
-
-def select_best_move(state, depth):
-    max_eval = -math.inf
-    best_move = None
-    my_moves = generate_all_moves(state, state.my_pieces)
-    num_processes = min(cpu_count(), len(my_moves))  # Use optimal number of processes
-
-    # Using multiproc33essing to evaluate moves in parallel
-    with Pool(processes=num_processes) as pool:
-        args = [(my_move, state, depth) for my_move in my_moves]
-        results = pool.map(evaluate_move, args)
-
-    for exp_value, my_move in results:
-        if exp_value > max_eval:
-            max_eval = exp_value
-            best_move = my_move
-    return best_move
-
-
-def beestMove(state):
-    
-    best_move = select_best_move(state, 2)
-    return [pos for pos in best_move['circle'] + best_move['triangle']]
-
-# state = GameState(my_color, opponent_color, my_pieces, opponent_pieces, inactive_squares, my_score, opponent_score)
 
 
 def computeRegions(grid):
@@ -334,7 +160,7 @@ def computeRegions(grid):
 
     grid = pieceOverlay
 
-    labeledGrid, numRegions = label(zero_array != 0)
+    labeledGrid, numRegions = label(zero_array != 0, structure=np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]))
     #or i in labeledGrid:
         #print("".join(str(i)))
 
@@ -384,8 +210,7 @@ def computeRegions(grid):
     return regions
 
 
-import os
-from dotenv import load_dotenv # type: ignore
+import os # type: ignore
 
 app = Flask(__name__, template_folder=os.getenv('TEMPLATE_FOLDER'), static_folder=os.getenv('STATIC_FOLDER'),)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -516,128 +341,33 @@ def selectedForExclusive(data):
 exclusiveMoves = {}
 
 
-class Board:
-    """Initalizes the board for the selected parameters. \n
-        The structure of the parameters is:
-        spaces: a list of taken spaces, color is irrelevant
-        pieces: a list of two lists for each player's pieces.
-          The first two elements represent the position of the respected player's circles, and the last two are for the triangles.
-            If an element is -1, that piece is no longer on the board.
-        
-    """
-    def __init__(self, spaces, pieces):
-        self.spaces = spaces
-        self.pieces = pieces
-        self.grid = ["" for _ in range(35)]
-        for space in spaces:
-            self.grid[space] += "0"
-        
-        for i in range(4):
-            whitePiece = pieces[0][i]
-            if whitePiece != -1:
-                if i<2:
-                    self.grid[whitePiece] += "k"
-                else:
-                    self.grid[whitePiece] += "t"
-            blackPiece =pieces[1][i]
-            if blackPiece != -1:
-                if i<2:
-                    self.grid[blackPiece] += "K" 
-                else:
-                    self.grid[blackPiece] += "T"
+def generateMoves(board):
+    
+    """Generates all possible moves for both players for the given Board object state."""
+    def generate_moves_for_piece(piece, spaces):
+        spaces = board.spaces
+        moves = []
+        if piece == -1:
+            return [-1]
+        transforms = [-7, 7]
+        if piece not in spaces:
+            transforms.append(0)
+        if piece % 7 != 0:
+            transforms.extend([-8, -1, 6])
+        if piece % 7 != 6:
+            transforms.extend([8, 1, -6])
+        for transform in transforms:
+            transformed = piece + transform
+            if 0 <= transformed < 35 and (transformed == piece or transformed not in spaces):
+                moves.append(transformed)
+        return moves if moves else [-1]
 
-def generateAllMoves(board):
-    whiteMoves = [[],[],[],[]]
-    blackMoves = [[],[],[],[]]
-    for i in range(4):
-        whitePiece = board.pieces[0][i]
-        if whitePiece == -1:
-            whiteMoves[i].append(-1)
-        if whitePiece != -1:
-            transforms = [-7,7]
-            if "0" not in board.grid[whitePiece]:
-                transforms.append(0)
-            if whitePiece%7 != 0:
-                transforms.extend([-8,-1,6])
-            if whitePiece%7 != 6:
-                transforms.extend([8,1,-6])
-            for transform in transforms:
-                transformed = whitePiece + transform
-                if transformed > -1 and transformed < 35:
-                    if transformed == whitePiece or transformed not in board.spaces and transformed not in board.pieces[0]:
-                        
-                        whiteMoves[i].append(transformed)
-        blackPiece = board.pieces[1][i]
-        if blackPiece == -1:
-            blackMoves[i].append(-1)
-        if blackPiece != -1:
-            transforms = [-7,0,7]
-            if blackPiece%7 != 0:
-                transforms.extend([-8,-1,6])
-            if blackPiece%7 != 6:
-                transforms.extend([8,1,-6])
-            for transform in transforms:
-                transformed = blackPiece + transform
-                if transformed > -1 and transformed < 35:
-                    if transformed == blackPiece or transformed not in board.spaces and transformed not in board.pieces[1]:
-                        
-                        blackMoves[i].append(transformed)
-    print(f"white can make {len(whiteMoves[0])*len(whiteMoves[1])*len(whiteMoves[2])*len(whiteMoves[3])} different moves")
-    print(f"black can make {len(blackMoves[0])*len(blackMoves[1])*len(blackMoves[2])*len(blackMoves[3])} different moves")
+    whiteMoves = [generate_moves_for_piece(piece, board.spaces) for piece in board.pieces[0]]
+    blackMoves = [generate_moves_for_piece(piece, board.spaces) for piece in board.pieces[1]]
+
     return whiteMoves, blackMoves
 
 
-
-def allNextSubmittedStates(board, maximizingPlayerIsBlack):
-
-    whiteMoves, blackMoves = generateAllMoves(board)
-    whiteBestMoves = []
-    blackBestMoves = []
-    whiteBestScore = 0
-    blackBestScore = 0
-    bestBoard = None
-    counter = 0
-    for k1 in whiteMoves[0]:
-        for k2 in whiteMoves[1]:
-            for t1 in whiteMoves[2]:
-                for t2 in whiteMoves[3]:
-                    for K1 in blackMoves[0]:
-                        for K2 in blackMoves[1]:
-                            for T1 in blackMoves[2]:
-                                for T2 in blackMoves[3]:
-                                    counter += 1
-                                    tempWhiteScore = 0
-                                    tempBlackScore = 0
-                                    newBoard = Board(board.spaces, [[k1,k2,t1,t2],[K1,K2,T1,T2]])
-                                    for i in newBoard.grid:
-                                        if i == "kT" or i == "Tk" or i == "tK" or i == "Kt":
-                                            tempBlackScore += 1
-                                        if i == "kK" or i == "tT":
-                                            tempWhiteScore += 1
-                                    if tempWhiteScore > whiteBestScore:
-                                        whiteBestScore = tempWhiteScore
-                                        whiteBestMoves = [k1,k2,t1,t2]
-                                        if not maximizingPlayerIsBlack:
-                                            bestBoard = newBoard
-                                    if tempBlackScore > blackBestScore:
-                                        blackBestScore = tempBlackScore
-                                        blackBestMoves = [K1,K2,T1,T2]
-                                        if maximizingPlayerIsBlack:
-                                            bestBoard = newBoard
-    print("white best moves", whiteBestMoves)
-    print("black best moves", blackBestMoves)
-    print("white best score", whiteBestScore)
-    print("black best score", blackBestScore)
-    print("counter", counter)
-
-    print("done")    
-    return blackBestMoves if maximizingPlayerIsBlack else whiteBestMoves   
-
-    
-class Board:
-    def __init__(self, fields:List[int], positions:List[List[int]]):
-        self.fields=set(fields)
-        self.positions=positions
 
 def bot_move(board:Board, isBlack:bool)->List[int]:
 # Constants
@@ -838,11 +568,29 @@ def submitMoves(data):
             if gameId in botGames and len(potezi) > 2:
                 adversariesLastMove = [int(i) for i in potezi[-2][int(not isBlack)]]
                 playersLastMove = [int(i) for i in potezi[-2][int(isBlack)]]
-                lastMoves = [adversariesLastMove,playersLastMove] if not isBlack else [playersLastMove,adversariesLastMove]
+                lastMoves = [adversariesLastMove,playersLastMove] if isBlack else [playersLastMove,adversariesLastMove]
                 print(lastMoves)
                 print(len(lastMoves))
                 botColor = "white" if isBlack else "black"
                 myColor = "black" if isBlack else "white"
+
+                # Check if any piece is surrounded and cannot move
+                for piece_index, piece in enumerate(lastMoves[int(not isBlack)]):
+                    neighbors = []
+                    if piece != -1:
+                        transforms = [-7, 7]
+                        if piece not in fields:
+                            transforms.append(0)
+                        if piece % 7 != 0:
+                            transforms.extend([-8, -1, 6])
+                        if piece % 7 != 6:
+                            transforms.extend([8, 1, -6])
+                        for transform in transforms:
+                            transformed = piece + transform
+                            if 0 <= transformed < 35 and (transformed == piece or transformed not in fields):
+                                neighbors.append(transformed)
+                        if all(neighbor in fields for neighbor in neighbors):
+                            lastMoves[int(not isBlack)][piece_index] = -1
              
         #             def __init__(self, my_color, opponent_color, my_pieces, opponent_pieces, inactive_squares, my_score, opponent_score, is_overtime=False):
         # self.my_color = my_color  # 'white' or 'black'
@@ -853,12 +601,12 @@ def submitMoves(data):
         # self.my_score = my_score
         # self.opponent_score = opponent_score
         # self.is_overtime = is_overtime  # Boolean flag for overtime
-                state = GameState(myColor,botColor,{CIRCLE:adversariesLastMove[:2],TRIANGLE:adversariesLastMove[2:]},{CIRCLE:adversariesLastMove[:2],TRIANGLE:adversariesLastMove[2:]},fields,0,0)
+                
                 board = Board(fields,lastMoves)
 
-                botMoves = bot_move(board,isBlack)
+                botMoves = SPPH(board,botColor)
                 potezi[-1][int(not isBlack)] = [str(i) for i in botMoves]
-                vremenaPoteza[-1][int(not isBlack)] = time
+                vremenaPoteza[-1][int(not isBlack)] = 0
                 print("BOT MOVES",botMoves)
                 print("BOT MOVES",potezi[-1][int(not isBlack)])
             if len(potezi) == 2 and gameId in botGames:
@@ -1113,8 +861,13 @@ def submitMoves(data):
             
             if areNotSegregated == len(regionsToSubmit):
                 if brojBijelih == brojCrnih:
-                    cur.execute("update igre set didss=%s where id=%s",(True,gameId))
-                    emit("ok",{"didss":True},to=id)
+                    whiteTime, blackTime = 0,0
+                    for times in vremenaPoteza:
+                        whiteTime += times[0]
+                        blackTime += times[1]
+                    loserIsBlack = True if whiteTime > blackTime else False
+                    cur.execute("update igre set pobjednik=%s where id=%s",(igraci[int(not winner)],gameId))
+                    emit("gameOver",{"loserIsBlack":loserIsBlack,"reason":"time"},to=id)
                 else:
                     winner = True if brojBijelih > brojCrnih else False
                     cur.execute("update igre set pobjednik=%s where id=%s",(igraci[int(winner)],gameId))
@@ -1174,8 +927,13 @@ def submitMoves(data):
                         break
             if not canMove:
                 if brojBijelih == brojCrnih:
-                    cur.execute("update igre set didss=%s where id=%s",(True,gameId))
-                    emit("ok",{"didss":True},to=id)
+                    whiteTime, blackTime = 0,0
+                    for times in vremenaPoteza:
+                        whiteTime += times[0]
+                        blackTime += times[1]
+                    loserIsBlack = True if whiteTime > blackTime else False
+                    cur.execute("update igre set pobjednik=%s where id=%s",(igraci[int(not winner)],gameId))
+                    emit("gameOver",{"loserIsBlack":loserIsBlack,"reason":"time"},to=id)
                 else:
                     winner = False if brojBijelih > brojCrnih else True
                     cur.execute("update igre set pobjednik=%s where id=%s",(igraci[int(winner)],gameId))
@@ -1762,13 +1520,16 @@ def editProfilePOST():
         print(theme)
         print("OVO JE THEME")
         image = request.form.get("profilePictureData")
-
+        imageData = None
+        width, height = 1,1
         if image.startswith("data:image"):
             image = image.split(',')[1]
-        imageData = base64.b64decode(image)
+            imageData = base64.b64decode(image)
+            imagee = Image.open(BytesIO(imageData))
+            width, height = imagee.size
         print("izbjegao sam raise")
-        imagee = Image.open(BytesIO(imageData))
-        width, height = imagee.size
+        
+        
         if width+height > 0:
             
             cur.execute("SELECT * FROM users WHERE username = %s",(username,))
@@ -1778,7 +1539,7 @@ def editProfilePOST():
                 if request.form.get("removeProfilePicture") == "on": cur.execute("update users set profile = %s where username = %s",(None,newUsername,))
                 print(f"{username} (sada {newUsername}) je stavio profilnu")
                 
-                cur.execute("update users set username=%s, password=%s, profile=%s, theme=%s where username=%s",(newUsername,generate_password_hash(password),imageData,theme,username))
+                cur.execute("update users set username=%s, password=%s, profile=%s, theme=%s where username=%s",(newUsername,generate_password_hash(password),imageData,session["theme"],username))
                 mysql.connection.commit()
                 cur.close()
                 return redirect(url_for("userProfile",username=username))
@@ -1789,7 +1550,7 @@ def editProfilePOST():
             print(width,height,"SLIKA GLUPA")
             return render_template("edit.html",error="Slika krivih veličina.")
     except Exception as e:
-
+        print("OVO JE IZUZETAK")
         print(e)
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE username = %s",(username,))
