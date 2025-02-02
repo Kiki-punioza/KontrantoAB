@@ -101,7 +101,7 @@
                 <p style="margin-bottom:-10px;">3. Ako se ne može više doći do sudara, onaj s više bodova je pobjednik.</p style="margin-bottom:-10px;">
             
             <p>U slučaju da se ne može doći do sudara a igrači su izjednačeni u bodovima, pobjednik je onaj kojemu je trebalo manje vremena.</p>
- 
+            <p>Zamolio bih Vas da bilo koju grešku prijavite na <a href="mailto:admin@kontranto.com">admin@kontranto.com</a>.</p>
             <p>Pravila nisu jednostavna. U Vašu korist prilažem Vam <a href="/static/pravila.pdf">originalna pravila, kako ih je napisao <b><i><u>S.M.</u></i></b></a>. Također Vam dajem link na originalnu verziju Kontranta na adresi <a href="https://kontranto.eu">kontranto.eu</a>. Želim Vam sretno razumijevanje ovih Pravila i svu sreću u Vašim partijama! </p>
             
         </div>
@@ -110,7 +110,15 @@
 
 </div>
 <script>
-    const empty = document.getElementById("empty");
+  for (let rule of document.styleSheets[0].cssRules){
+        if(rule.selectorText == "div.black"){
+            blackColor = rule.style.backgroundColor;
+        }
+        if(rule.selectorText == "div.white"){
+            whiteColor = rule.style.backgroundColor;
+        }
+  }
+      const empty = document.getElementById("empty");
     //create 35 cells
     for (let i = 0; i < 35; i++) {
         const cell = document.createElement("div");
@@ -132,14 +140,14 @@
         if(i == 34 ){
             cell.innerHTML = `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="38" cy="38" r="35" stroke="white" stroke-width="3" fill="black" />
+    <circle cx="38" cy="38" r="35" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
   </svg>
 `;
         }
         if ( i== 5){
             cell.innerHTML = `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="38,3 73,73 3,73" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="38,3 73,73 3,73" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
   </svg>
     `;
         }
@@ -148,7 +156,7 @@
 
 
   <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="38,3 73,73 3,73" stroke="black" stroke-width="3" fill="white" />
+    <polygon points="38,3 73,73 3,73" stroke="${blackColor}" stroke-width="3" fill="${whiteColor}" />
   </svg>
     `;}
 
@@ -157,10 +165,10 @@
         cell.innerHTML = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-   <circle cx="19" cy="19" r="17" stroke="black" stroke-width="3" fill="white" />
+   <circle cx="19" cy="19" r="17" stroke="${blackColor}" stroke-width="3" fill="${whiteColor}" />
 </svg>
 <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-  <circle cx="19" cy="19" r="17" stroke="white" stroke-width="3" fill="black" />
+  <circle cx="19" cy="19" r="17" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
 </svg>
 </div>
       `;
@@ -171,10 +179,10 @@
         cell.innerHTML = `
       <div style="display: flex; justify-content: center; align-content: center;">
 <svg height="38" class="piece white" width="38" xmlns="http://www.w3.org/2000/svg" id="circle">
-   <circle cx="19" cy="19" r="17" stroke="black" stroke-width="3" fill="white" />
+   <circle cx="19" cy="19" r="17" stroke="${blackColor}" stroke-width="3" fill="${whiteColor}" />
 </svg>
   <svg height="38" class="piece black" width="38" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="19,3 35,35 3,35" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="19,3 35,35 3,35" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
   </svg>
 </div>
       `;
@@ -198,21 +206,21 @@
 
 
 <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-  <polygon points="38,3 73,73 3,73" stroke="black" stroke-width="3" fill="white" />
+  <polygon points="38,3 73,73 3,73" stroke="${blackColor}" stroke-width="3" fill="${whiteColor}" />
 </svg>
   `;
         }
         if([12,28].includes(i)){
             cell.innerHTML = `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="38" cy="38" r="35" stroke="white" stroke-width="3" fill="black" />
+    <circle cx="38" cy="38" r="35" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
   </svg>
 `;
         }
         if ([2,31].includes(i)){
         cell.innerHTML =    `
   <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
-    <circle cx="38" cy="38" r="35" stroke="black" stroke-width="3" fill="white" />
+    <circle cx="38" cy="38" r="35" stroke="${blackColor}" stroke-width="3" fill="${whiteColor}" />
   </svg>
 
     `
@@ -220,7 +228,7 @@
         if ([0,29].includes(i)){
             cell.innerHTML = `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
-    <polygon points="38,3 73,73 3,73" stroke="white" stroke-width="3" fill="black" />
+    <polygon points="38,3 73,73 3,73" stroke="${whiteColor}" stroke-width="3" fill="${blackColor}" />
   </svg>
     `;}
         if ([3,10,16,23,30].includes(i)){

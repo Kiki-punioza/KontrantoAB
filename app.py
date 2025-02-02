@@ -49,7 +49,7 @@ def areUnique(a, b, c, d):
     unique_nums = {x for x in nums if x != -1}  
     return len(unique_nums) == len([x for x in nums if x != -1])
 
-def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 3, attackedSpaceValue:int = 8, randValue:int = 1, distanceFactor:int = 0,doSorting:bool = True):
+def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 3, attackedSpaceValue:int = 8, randValue:int = 1, distanceFactor:int = 17,doSorting:bool = True,exclusiveMove:List[int]=None):
     """Sorted per piece heuristics
 
     Args:
@@ -78,8 +78,11 @@ def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 
     distances = []
     for moveIndex in range(4):
         moveScore = -inf
-        bestMove = -1
+        bestMove = board.pieces[maximizingPlayer][moveIndex]
         for move in moves[maximizingPlayer][moveIndex]:
+            if exclusiveMove != None and exclusiveMove[0] == board.pieces[maximizingPlayer][moveIndex]:
+                bestMoves.append(exclusiveMove[1])
+                continue
             if move != -1:
                 
                 currentMoveScore = 0
@@ -90,6 +93,17 @@ def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 
                         currentMoveScore += unnatackedSpaceValue+round(uniform(-randValue,randValue),2)
                         
                     for otherMove in moves[otherPlayer][otherMoveIndex]:
+                        myPieceType = "circle" if moveIndex < 2 else "triangle"
+                        otherPieceType = "circle" if otherMoveIndex < 2 else "triangle"
+                        iWantToBeCloserToThisPiece = myPieceType == otherPieceType if maximizingPlayer == 1 else myPieceType != otherPieceType
+                        if move != otherMove and otherMove != -1 and distanceFactor != 0:
+                            distance = aStar(board.spaces, move, otherMove)+1
+                            if distance > 0:
+                                if iWantToBeCloserToThisPiece:
+                                    currentMoveScore += distanceFactor * (1/distance)+round(uniform(-randValue,randValue),2)*polarity
+                                else:
+                                    currentMoveScore -= distanceFactor * (1/distance)+round(uniform(-randValue,randValue),2)*polarity
+      
                         if (move == otherMove and ((moveIndex < 2 and otherMoveIndex < 2) or (moveIndex >= 2 and otherMoveIndex >= 2))):
                             currentMoveScore += (attackedSpaceValue+round(uniform(-randValue,randValue),2))*polarity
                         if (move == otherMove and ((moveIndex < 2 and otherMoveIndex >= 2) or (moveIndex >= 2 and otherMoveIndex < 2))):
@@ -104,6 +118,9 @@ def SPPH(board: Board=None,maximizingPlayer:str=None,unnatackedSpaceValue:int = 
         all_moves = []
         for piece_index, moves_list in movesToCheck.items():
             for move, score in moves_list:
+                if len(moves_list) == 1:
+                    score = 999999
+                    print("JEDAN")
                 all_moves.append((piece_index, move, score))
 
 
@@ -541,15 +558,18 @@ def submitMoves(data):
         print("ATO JE EKXLSUAV")
         print(moves)
 
+        if id not in exclusiveMoves:
+            exclusiveMoves[id] = [None, None]
         exclusiveMoves[id][int(isBlack)] = [int(myExclusiveMove),potezi[-1][int(isBlack)][int(myExclusiveMove)]]
+        print(exclusiveMoves)
+        print("TO JE EXCLUSIVE MOVE")
 
 
             
 
             
     if potezi[-1][int(not isBlack)] != [] or id in botGames:
-            id = request.sid if id in botGames else id
-            
+
             #write a comment of how to get the union of two lists
             #the syntax is list(set(list1) | set(list2))
             print("POTEZI SU ",potezi)
@@ -568,6 +588,7 @@ def submitMoves(data):
             if gameId in botGames and len(potezi) > 2:
                 adversariesLastMove = [int(i) for i in potezi[-2][int(not isBlack)]]
                 playersLastMove = [int(i) for i in potezi[-2][int(isBlack)]]
+
                 lastMoves = [adversariesLastMove,playersLastMove] if isBlack else [playersLastMove,adversariesLastMove]
                 print(lastMoves)
                 print(len(lastMoves))
@@ -601,9 +622,10 @@ def submitMoves(data):
         # self.my_score = my_score
         # self.opponent_score = opponent_score
         # self.is_overtime = is_overtime  # Boolean flag for overtime
-                
+                exclusiveMove = [[] , []]
+                myExclusiveMove = None
                 board = Board(fields,lastMoves)
-
+                botsExclusiveMove = exclusiveMoves[gameId][int(not isBlack)] if gameId in exclusiveMoves else None
                 botMoves = SPPH(board,botColor)
                 potezi[-1][int(not isBlack)] = [str(i) for i in botMoves]
                 vremenaPoteza[-1][int(not isBlack)] = 0
@@ -611,6 +633,7 @@ def submitMoves(data):
                 print("BOT MOVES",potezi[-1][int(not isBlack)])
             if len(potezi) == 2 and gameId in botGames:
                 print(potezi)
+
 
             cur.execute("update igre set potezi=%s, vremenaPoteza=%s where id=%s",(json.dumps(potezi),json.dumps(vremenaPoteza),gameId))
 
@@ -825,8 +848,10 @@ def submitMoves(data):
                 for key in list(dbRegions.keys()):
                     if dbRegions[key][0] == 0:
                         del dbRegions[key]
+                        continue
                     if dbRegions[key][2] == localRegions[key][2]:
                         del dbRegions[key]
+                        continue
 
 
 
@@ -906,6 +931,16 @@ def submitMoves(data):
                 emit("gameOver",{"loserIsBlack":False,"reason":"spaces"},to=id)
             if exclusiveMove != [[] , []]:
                 print("O MOJ BOŽE IZVANREDNI POTEZ")
+            if gameId in botGames:
+                if exclusiveMove != [[] , []]:
+                    print("EXLCSIVEAMEOAVMAEOMVEOA")
+                    print(exclusiveMove)
+                    exclusiveMove[not isBlack] = [random.choice(exclusiveMove[not isBlack])]
+                    if id not in exclusiveMoves:
+                        exclusiveMoves[id] = [None, None]
+                    exclusiveMoves[id][not isBlack] = []
+                    selectedForExclusive({"isBlack":not isBlack,"cell":random.choice(exclusiveMove[not isBlack]),"id":gameId})
+
 
             canMove = False
             directions = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
@@ -1224,7 +1259,7 @@ ERROR
 #####""")
 
     descs = {
-        500:"Ups! Napravili smo grešku.",
+        500:"Ups! Napravili smo grešku. Pokušajte ponovno ili nas kontaktirajte na <a href='mailto:admin@kontranto.com'>admin@kontranto.com</a>",
         404:"Stranica koju tražite ne postoji."
     }
     if hasattr(e,"code"):
@@ -1275,6 +1310,63 @@ def login(username,password):
         print(e)
         return ["error"]
 
+import heapq
+
+def aStar(spaces, start, end):
+    """A* pathfinding algorithm for the given board state, start and end positions."""
+    R, C = 5, 7
+    
+    # Quick boundary and occupancy checks
+    if not (0 <= start < R*C and 0 <= end < R*C):
+        return -1
+    if start in spaces or end in spaces:
+        return -1
+    
+    # Map index to row,col
+    def to_rc(p):
+        return divmod(p, C)
+    
+    # Heuristic (Manhattan)
+    def heuristic(a, b):
+        ra, ca = to_rc(a)
+        rb, cb = to_rc(b)
+        return abs(ra - rb) + abs(ca - cb)
+    
+    # Get neighbors (8 directions)
+    def neighbors(pos):
+        r, c = to_rc(pos)
+        for dr in [-1, 0, 1]:
+            for dc in [-1, 0, 1]:
+                if dr == 0 and dc == 0:
+                    continue
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < R and 0 <= nc < C:
+                    nxt = nr*C + nc
+                    if nxt not in spaces:
+                        yield nxt
+    
+    open_set = []
+    heapq.heappush(open_set, (0 + heuristic(start, end), 0, start))
+    
+    came_from = {start: None}
+    g_score = {start: 0}
+    
+    while open_set:
+        _, dist, current = heapq.heappop(open_set)
+        if current == end:
+            return dist  # distance found
+        
+        for nxt in neighbors(current):
+            tentative_g = dist + 1
+            if tentative_g < g_score.get(nxt, float('inf')):
+                came_from[nxt] = current
+                g_score[nxt] = tentative_g
+                priority = tentative_g + heuristic(nxt, end)
+                heapq.heappush(open_set, (priority, tentative_g, nxt))
+    
+    return -1
+
+
 @app.route("/review/<id>")
 def reviewPage(id):
     #+---------------+--------------+------+-----+---------+-------+
@@ -1300,7 +1392,7 @@ def reviewPage(id):
     print(game)
     print("OVOJE GAME")
     if game:
-        if game[10] != None:
+        if True:
             print(game)
             users = json.loads(game[2])
             white = users[1]
@@ -1315,7 +1407,76 @@ def reviewPage(id):
             times = json.loads(game[5])
             whiteSpaces = json.loads(game[9])
             blackSpaces = json.loads(game[8])
-            return render_template("review.html",id=id,white=white,black=black,moves=moves,times=times,whiteSpaces=whiteSpaces,blackSpaces=blackSpaces)
+            spaces = []
+            for space in [whiteSpaces,blackSpaces]:
+                for i in space:
+                    if i[1] != []:
+                        spaces.extend([int(g) for g in i[1]])
+                
+            evals = []
+            for i in range(1,len(moves)-1):
+                score = 0
+                for whitePiece in range(4):
+                    for blackPiece in range(4):
+                        if True:
+                            whiteType = "circle" if whitePiece in [0,1] else "triangle"
+                            blackType = "circle" if blackPiece in [0,1] else "triangle"
+                            whitePos = moves[i][0][whitePiece]
+                            blackPos = moves[i][1][blackPiece]
+                            whitePos,blackPos = int(whitePos),int(blackPos)
+                            whiteMoves = [-7,0,7]
+                            blackMoves = [-7,0,7]
+                            if whitePos % 7 != 0:
+                                whiteMoves.extend([-8,-1,6])
+                            if whitePos % 7 != 6:
+                                whiteMoves.extend([-6,1,8])
+                            if blackPos % 7 != 0:
+                                blackMoves.extend([-8,-1,6])
+                            if blackPos % 7 != 6:
+                                blackMoves.extend([-6,1,8])
+                            whitePieceMoves = []
+                            blackPieceMoves = []
+                            for transform in whiteMoves:
+                                transform = whitePos + transform
+                                if transform >= 0 and transform < 35 and not transform in spaces:
+                                    whitePieceMoves.append(transform)
+                            for transform in blackMoves:
+                                transform = blackPos + transform
+                                if transform >= 0 and transform < 35 and not transform in spaces:
+                                    blackPieceMoves.append(transform)
+                            
+                            overlap = set(whitePieceMoves) & set(blackPieceMoves)
+                            for over in overlap:
+                                if whiteType == blackType:
+                                    score += 8
+                                else:
+                                    score -= 8
+                            unique_white = set(whitePieceMoves) - overlap
+                            unique_black = set(blackPieceMoves) - overlap
+
+                            score += 3 * len(unique_white)
+                            score -= 3 * len(unique_black)
+                        else:
+                            whiteType = "circle" if whitePiece in [0,1] else "triangle"
+                            blackType = "circle" if blackPiece in [0,1] else "triangle"
+                            whitePos = moves[i][0][whitePiece]
+                            blackPos = moves[i][1][blackPiece]
+                            whitePos,blackPos = int(whitePos),int(blackPos)
+
+                            distance = aStar(spaces,whitePos,blackPos)
+                            
+                            if distance != -1:
+                                if whiteType == blackType:
+                                    print("udaljenost između",whitePos,blackPos,distance)
+                                    score += distance
+                                else:
+                                    score -= distance
+                            
+                evals.append(score)
+            print("EVALS")
+            print(evals)
+            print("EVALS")
+            return render_template("review.html",id=id,white=white,black=black,moves=moves,times=times,whiteSpaces=whiteSpaces,blackSpaces=blackSpaces,evals=evals)
         else:
             print("neamg a")
             return abort(404)
@@ -1341,8 +1502,10 @@ def showImage(username):
 def userProfile(username):
     global fiirstN
     cur = mysql.connection.cursor()
-    cur.execute("SELECT ID FROM users WHERE username = %s",(username,))
-    userId = cur.fetchone()[0]
+    cur.execute("SELECT ID, bio FROM users WHERE username = %s",(username,))
+    result = cur.fetchone()
+    userId = result[0]
+    bio = result[1]
     points = 0
     cummulative = 0
     print(userId)
@@ -1420,9 +1583,11 @@ def userProfile(username):
         print(min(fiirstN,applicableGames))
         
         points = points/min(fiirstN,applicableGames)
-        print("Igrač",username,"ima",points,"bodova.")
+
         points += 18
-        print(points)
+
+        print("Igrač",username,"ima",points,"bodova.")
+
         
     except:
         points = 0
@@ -1433,7 +1598,7 @@ def userProfile(username):
     print(points)
     #print(gamesToSend)
         
-    return render_template("profile.html",username=username,games=gamesToSend,points=points,cummulative=cummulative,firstN=fiirstN)
+    return render_template("profile.html",username=username,bio=bio,games=gamesToSend,points=points,cummulative=cummulative,firstN=fiirstN)
 
 @app.route("/eula")
 def eulaPage():
@@ -1488,7 +1653,8 @@ def editProfilePOST():
     newUsername = request.form.get("username")
     password = request.form.get("password")
     theme = request.form.get("theme")
-
+    bio = request.form.get("bio")
+    newpassword = request.form.get("newpass")
     cur = mysql.connection.cursor()
     print(session["user"])
     print(request.form.get("removeProfilePicture"))
@@ -1522,11 +1688,20 @@ def editProfilePOST():
         image = request.form.get("profilePictureData")
         imageData = None
         width, height = 1,1
+        if request.form.get("removeProfilePicture") == "on":
+            imageData = None
+        else:
+            cur.execute("SELECT profile FROM users WHERE username = %s",(username,))
+            imageData = cur.fetchone()[0]
+
         if image.startswith("data:image"):
             image = image.split(',')[1]
             imageData = base64.b64decode(image)
             imagee = Image.open(BytesIO(imageData))
             width, height = imagee.size
+
+
+        
         print("izbjegao sam raise")
         
         
@@ -1536,10 +1711,11 @@ def editProfilePOST():
             user = cur.fetchone()
 
             if user and check_password_hash(user[1],password):
+                password = newpassword if newpassword != "" else password
                 if request.form.get("removeProfilePicture") == "on": cur.execute("update users set profile = %s where username = %s",(None,newUsername,))
                 print(f"{username} (sada {newUsername}) je stavio profilnu")
                 
-                cur.execute("update users set username=%s, password=%s, profile=%s, theme=%s where username=%s",(newUsername,generate_password_hash(password),imageData,session["theme"],username))
+                cur.execute("update users set username=%s, password=%s, profile=%s, theme=%s, bio=%s where username=%s",(newUsername,generate_password_hash(password),imageData,session["theme"],bio,username))
                 mysql.connection.commit()
                 cur.close()
                 return redirect(url_for("userProfile",username=username))
@@ -1680,9 +1856,11 @@ def cancelGame(id):
         cur = mysql.connection.cursor()
         cur.execute("select krenulo from igre where id=%s",(id,))
         ax = cur.fetchone()
+        print("ok odustajemo od igre",id)
         if ax == None:
             return redirect(url_for("matchMaking"))
         if not ax[0]:
+            del waitingGames[id]
             cur.execute("delete from igre where id=%s",(id,))
             mysql.connection.commit()
             cur.close()
@@ -1692,65 +1870,128 @@ def cancelGame(id):
     else: return render_template("login.html",error="Ulogirajte se.")
 
 
-def getPointsofPlayer(username):
-    global fiirstN
-    firstN = fiirstN
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT ID FROM users WHERE username = %s",(username,))
-    userId = cur.fetchone()[0]
-    points = 0
-    cur.execute("SELECT * FROM igre WHERE JSON_CONTAINS(igraci,JSON_ARRAY(%s))",(userId,))
-    games = cur.fetchall()
-    acculumate = 0
-    for game in games:
-        try:
-            if firstN == 0:
-                break
-            users = json.loads(game[2])
-            white = users[1]
-            black = users[0]
+def getPointsofPlayer(userId):
+    
+    if userId:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM igre WHERE JSON_CONTAINS(igraci,JSON_ARRAY(%s)) ORDER BY vrijeme DESC",(userId,))
+        games = cur.fetchall()
+        gamesToSend = []
+        applicableGames = 0
+        points = 0
+        cummulative = 0
+        firstN = fiirstN
+        for game in games:
 
-            if black == userId:
+            try:
+                
+                doNotAppend = False
+ 
+                #time = float(game[3])  # Convert to float to ensure compatibility
+                # Convert server time to local time using javascript on client side
+                formattedTime = time# datetime.datetime.fromtimestamp(time).strftime("%d.%m.%Y %H:%M")
+                users = json.loads(game[2])
+                white = users[1]
+                black = users[0]
+                thisGamesPointsWhite = 0
+                thisGamesPointsBlack = 0
 
                 for i in json.loads(game[8]):
-                    points += len(i[1])
-                    acculumate += len(i[1])
+                    thisGamesPointsBlack += len(i[1])
                 for i in json.loads(game[9]):
-                    points -= len(i[1])
-            elif white == userId:
-                for i in json.loads(game[9]):
-                    acculumate += len(i[1])
-                    points += len(i[1])
-                for i in json.loads(game[8]):
-                    points -= len(i[1])
-            firstN -= 1
-        except: pass
+                    thisGamesPointsWhite += len(i[1])
+                if thisGamesPointsBlack == 0 and thisGamesPointsWhite == 0:
+                    #print("nema bodova")
+                    doNotAppend = True
+                else:
+                    #print("ima bodova")
+                    applicableGames +=1
+                if not doNotAppend and fiirstN > 0:
+                    if black == userId:
+                        for i in json.loads(game[8]):
+
+                            points += len(i[1]) if firstN > 0 else 0
+                            cummulative += len(i[1])
+                        for i in json.loads(game[9]):
+                            points -= len(i[1]) if firstN > 0 else 0
+                    elif white == userId:
+                        for i in json.loads(game[9]):
+                            points += len(i[1]) if firstN > 0 else 0
+                            cummulative += len(i[1])
+                        for i in json.loads(game[8]):
+                            points -= len(i[1]) if firstN > 0 else 0
+                    firstN -= 1
+                    #print(firstN)
+                whitee = cur.execute("SELECT username FROM users WHERE id = %s",(white,))
+                whitee = cur.fetchone()[0]
+                blackk = cur.execute("SELECT username FROM users WHERE id = %s",(black,))
+                blackk = cur.fetchone()[0]
+                winner = whitee if game[10] == white else blackk
+
+
+                
+                gamesToSend.append({"id":game[0],"white":whitee,"black":blackk,"winner":winner, "score": str(thisGamesPointsWhite)+"-"+str(thisGamesPointsBlack)})
+            except Exception as e:
+                pass
+                
     try: 
-        points = points/min(firstN,len(games))
+        
+        print(points,"SU BODOVI")
+        print("APLIKABLO GEMASTOJSEND",applicableGames)
+        print("TO JE LEN GEMASTOJSEND")
+        print(min(fiirstN,applicableGames))
+        
+        points = points/min(fiirstN,applicableGames)
+        print("Igrač",userId,"ima",points,"bodova.")
         points += 18
+        print(points)
     except:
         points = 0
     
     points = round(points,2)
     points = min(36,points)
     points = max(0,points)
-    return [points,acculumate,len(games)]
+    print(points)
+    return points,cummulative,applicableGames
 
 @app.route("/leaderboard")
 def leaderboard():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT username FROM users")
+    cur.execute("SELECT id,username FROM users")
     users = cur.fetchall()
     print(users)
     print("USERS")
     leaderboard = []
+    allpoints = []
     for user in users:
         points = getPointsofPlayer(user[0])
         print(points)
         print("POINTS")
-        leaderboard.append({"username":user[0],"points":points[0],"cummulative":points[1],"games":points[2]})
+        allpoints.append(points)
+        leaderboard.append({"username":user[1],"points":points[0],"cummulative":points[1],"games":points[2]})
+
+
+    # Calculate the spread of users by points
+    points_distribution = [0] * 6
+    for user in leaderboard:
+        points = user["points"]
+        if points < 6:
+            points_distribution[0] += 1
+        elif points < 12:
+            points_distribution[1] += 1
+        elif points < 18:
+            points_distribution[2] += 1
+        elif points < 24:
+            points_distribution[3] += 1
+        elif points < 30:
+            points_distribution[4] += 1
+        else:
+            points_distribution[5] += 1
+
+    # Create bar chart
+    points_distribution = [i*100/len(leaderboard) for i in points_distribution]
     leaderboard = sorted(leaderboard,key=lambda x: x["points"],reverse=True)
-    return render_template("leaderboard.html",leaderboard=leaderboard)
+    return render_template("leaderboard.html",leaderboard=leaderboard,points_distribution=points_distribution)
 
 
 @app.route("/reviewimage/<id>")
@@ -1864,15 +2105,29 @@ def joinPrivateGame():
 
 @app.route("/play")
 def matchMaking():
-    if session.get("user"): return render_template("matchmaking.html")
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM igre WHERE privatna=0 and krenulo=0")
+    games = cur.fetchall()
+    anyAvailable = False
+    if games:
+        print("IMA IGARA")
+        anyAvailable = True
+
+    if session.get("user"): return render_template("matchmaking.html",anyAvailable=anyAvailable)
     else: return render_template("login.html",error="Ulogirajte se da biste igrali.")
 
 @app.route("/edit")
 def editProfile():
-    if session.get("user"): return render_template("edit.html")
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT bio FROM users WHERE username = %s",(session.get("user"),))
+    bio = cur.fetchone()[0]
+    if session.get("user"): return render_template("edit.html",bio=bio)
     else: return render_template("login.html",error="Ulogirajte se.")
 
 
+@app.route("/colors")
+def colorsPage():
+    return render_template("colors.html")
 
 @app.route("/about")
 def aboutPage():

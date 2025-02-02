@@ -4,10 +4,19 @@
         <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Igrač {{ username }}</title> 
     <style>
+
+.games-card{
+  
+  display:grid;
+  justify-items: center;
+  grid-template-columns: 2fr 3fr 1fr;
+  align-items: center;               /* Aligns all content vertically */
+  gap: 10px;     
+}
         .popup{
             position: fixed; /* Ensures popup is relative to the viewport */
 top: 50%;
@@ -22,9 +31,21 @@ transform: translate(-50%, -50%);
             
         }
         .clickable:hover {
-            color: #777;
-        }
+    color:#4181b9;
+  }
+        .profile-stats p{
+                margin-bottom: 0px;
+            }
         @media (max-aspect-ratio: 1/1){
+            .profile-stats p{
+                margin-bottom: 50px;
+            }
+            .leaveButton{
+            position: fixed;
+            bottom: calc(20px + env(safe-area-inset-bottom)); /* Ensures it accounts for safe areas on mobile */
+
+            will-change: transform;
+            }
             .popup{
             position: fixed; /* Ensures popup is relative to the viewport */
 top: 15%;
@@ -73,7 +94,9 @@ transform: scale(0.9);
             <div class="name-and-elo">
             <h2>{{ username }}</h2><small style="margin-top:5px; margin-left: 5px; cursor: help;" onclick="openPopup()" >({{ points }})</small>
         </div>
-        
+            <div class="bio" style="max-width: 180px;">
+                <p style="margin-bottom:10px; word-wrap: break-word;"><i>{{ bio }}</i></p>
+            </div>
             <div class="profile-stats">
             
             <p>Zauzeo: {{ cummulative }}</p>
@@ -96,7 +119,9 @@ transform: scale(0.9);
                 {% if game["winner"] == game["white"] %}
                 <p>
                     {% if game["white"] == username %}
-                        <b>{{ game["white"] }}</b>
+                    <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}' ">
+                        {{ game["white"] }}
+                    </clickable>
                     {% else %}
                         <b>
                             <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}' ">
@@ -106,7 +131,9 @@ transform: scale(0.9);
                     {% endif %}
                     vs
                     {% if game["black"] == username %}
+                    <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
                         {{ game["black"] }}
+                    </clickable>
                     {% else %}
                         <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
                             {{ game["black"] }}
@@ -116,7 +143,9 @@ transform: scale(0.9);
                 {% else %}
                 <p>
                     {% if game["white"] == username %}
+                    <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}' ">
                         {{ game["white"] }}
+                    </clickable>
                     {% else %}
                         <clickable class="clickable" onclick="location.href='/user/profile/{{ game['white'] }}'">
                             {{ game["white"] }}
@@ -124,7 +153,9 @@ transform: scale(0.9);
                     {% endif %}
                     vs
                     {% if game["black"] == username %}
-                        <b>{{ game["black"] }}</b>
+                        <b>                            <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
+                            {{ game["black"] }}
+                        </clickable></b>
                     {% else %}
                         <b>
                             <clickable class="clickable" onclick="location.href='/user/profile/{{ game['black'] }}'">
@@ -140,12 +171,12 @@ transform: scale(0.9);
             {% endfor %}
     </div>
     
-        
+    <div style="margin-top:60px;"></div>    
                     
 
 
 
-        <button onclick="location.href='/'">Nazad</button>
+        <button class="leaveButton" onclick="location.href='/'" style="position: fixed; bottom:0%; will-change: transform;">Nazad</button>
     
 
     </body>

@@ -18,9 +18,7 @@
     .iinput{
         width:80%;
     }
-    .label{
-        
-    }
+
 }
     </style>
 </head>
@@ -70,17 +68,25 @@
         <option value="dark" {% if session.get('theme', 'dark') == 'dark' %}selected="selected"{% endif %}>Tamna</option>
         <option value="light" {% if session.get('theme') == 'light' %}selected="selected"{% endif %}>Svijetla</option>
         <option value="pink" {% if session.get('theme') == 'pink' %}selected="selected"{% endif %}>Roza</option>
-        <option value="blue" {% if session.get('theme') == 'blue' %}selected="selected"{% endif %}>Plava</option>
+        <option value="eu" {% if session.get('theme') == 'eu' %}selected="selected"{% endif %}>Stara</option>
         
     </select>
 </div>
+
+<div class="games-card" style="margin-top:20px; padding: 10px;">
+
+    <input class="iinput" name="bio" placeholder="Bio" value="{{ bio }}" maxlength="50">
+</div>
+<div class="games-card" style="margin-top:20px; padding: 10px;">
+    <input class="iinput" name="newpass" placeholder="Nova lozinka" type="password" >
 </form>
+</div>
 {% if error %}
 <div class="error" style="margin-top:10px;">
     {{ error }}
 </div>
 {% endif %}
-        </div>
+       
 
 
 

@@ -48,6 +48,9 @@ display: grid;
       cursor: pointer;
     }
     @media (max-aspect-ratio: 1/1){
+      .popup{
+        width:60%;
+      }
     html
 {
   transform: scale(0.8);
@@ -260,16 +263,14 @@ display: grid;
       blackPlayer = isBlack ? "{{ session['user'] }}" : data.otherPlayer;
       whitePlayer = isBlack ? data.otherPlayer : "{{ session['user'] }}";
 
-      myColor = "{{ session['theme'] }}";
-      if (myColor == "dark" || myColor == "light"){
-        whiteColor = "white";
-        blackColor = "black";
-      }
-      else{
-        whiteColor = "pink";
-        blackColor = "#6AABFF";
-      }
-      
+      for (let rule of document.styleSheets[0].cssRules){
+        if(rule.selectorText == "div.black"){
+            blackColor = rule.style.backgroundColor;
+        }
+        if(rule.selectorText == "div.white"){
+            whiteColor = rule.style.backgroundColor;
+        }
+  }
 
       const  K  =   `
   <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
@@ -711,7 +712,7 @@ for (let index = 0; index < 4; index++) {
         }
     }
 }
-                  if (movesOfPieces[+selectedElement.getAttribute("index")].includes(element.id)){
+                    if (movesOfPieces[+selectedElement.getAttribute("index")] && movesOfPieces[+selectedElement.getAttribute("index")].includes(element.id)){
                     console.log(`MOVES SBLACK JE ${moves[+isBlack]} A ELEMENT JE ${element.id} A PIECE JE ${selectedPiece}`);
                     let oldPosition = selectedId.toString();
                     let newPosition = element.id;
@@ -733,7 +734,7 @@ for (let index = 0; index < 4; index++) {
                     selectedPiece = undefined;
                     selectedIndex = undefined;
                   
-                   
+                    clearSelections();
                     updateBoard();
                     setTimeout(() => {
     document.querySelectorAll(".cell").forEach(element => {
@@ -753,7 +754,7 @@ attachListeners();
                     for (let index = 0; index < 4; index++) {
                       
     let position = moves[+isBlack][index];
-    if (position !== -1) {
+    if (position != -1) {
         let parentDiv = document.getElementById(position.toString());
         pieceType = index < 2 ? "circle" : "triangle";
         //get the element with the id of the pieceType and class of the color
@@ -1172,48 +1173,39 @@ attachListeners();
             }
             updateBoard();
 
+
             for (let i = 0; i < 4; i++) {
               console.log("gledam")
               let position = moves[+isBlack][i];
               if (position !== -1 && position !== -2) {
-              let cell = document.getElementById(position.toString());
-              console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
-              if (cell.querySelectorAll(".piece").length > 1) {
-                let allowedMoves = computeAllowedMoves(position);
-                if (allowedMoves.length == 0) {
-                console.log(`nema ih ${position}`);
-                moves[+isBlack][i] = -1;
-                }
-                
-                let onlyMoveIntoSameColor = allowedMoves.every(move => {
-                let targetCell = document.getElementById(move);
-                return targetCell.querySelector(isBlack ? ".black" : ".white");
-                });
-                if (onlyMoveIntoSameColor) {
-                posIAmMovingInto = allowedMoves[0];
-                movesFromThePosIAmMovingInto = computeAllowedMoves(posIAmMovingInto);
-                
-                // Subtract the squares others have to move in from the moves from the position I am moving into
-                for (let j = 0; j < 4; j++) {
-                  if (j !== i) {
-                  let otherPosition = moves[+isBlack][j];
-                  if (otherPosition !== -1 && otherPosition !== -2) {
-                    let otherAllowedMoves = computeAllowedMoves(otherPosition);
-                    movesFromThePosIAmMovingInto = movesFromThePosIAmMovingInto.filter(move => !otherAllowedMoves.includes(move));
+                let cell = document.getElementById(position.toString());
+                console.log(`na ${position} ih ima ${cell.querySelectorAll(".piece").length}`);
+                if (cell.querySelectorAll(".piece").length > 1) {
+                  let allowedMoves = computeAllowedMoves(position);
+                  if (allowedMoves.length ==0){
+                    console.log(`nema ih ${position}`);
+                    moves[+isBlack][i] = -1;
+                  }
+                 
+                    
+                  let onlyMoveIntoSameColor = allowedMoves.every(move => {
+                    let targetCell = document.getElementById(move);
+                    return targetCell.querySelector(isBlack ? ".black" : ".white");
+                  });
+                  if (onlyMoveIntoSameColor) {
+                    posIAmMovingInto = allowedMoves[0];
+                    movesFromThePosIAmMovingInto = computeAllowedMoves(posIAmMovingInto);
+                    
+                    if (movesFromThePosIAmMovingInto.length == 1) {
+                    moves[+isBlack][i] = -1;
                   }
                   }
-                }
-
-                if (movesFromThePosIAmMovingInto.length <= 1) {
-                  moves[+isBlack][i] = -1;
-                }
-                } else {
-                console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
+                  else{
+                    console.log(`pa, više ih je ali smije se! na poziciji ${position}`);
+                  }
                 }
               }
-              }
-            }
-            updateBoard();
+            }            updateBoard();
             if (data.exclusiveMove[0].length > 0 || data.exclusiveMove[1].length > 0){ 
               console.log("DISABLEAM GA");
               disableConfirmButton();}
@@ -1268,7 +1260,7 @@ attachListeners();
         for (var id of moves){
           //id = id.padStart(2,"0");
 
-          document.getElementById(id).style="border: 2px solid #090;";
+          document.getElementById(id).classList.add("selected");
 
         }
       }
@@ -1367,6 +1359,9 @@ attachListeners();
 
         for (let i = 0; i < moves[0].length; i++) {
   let lowerMove = moves[0][i];
+  if (i == -1){
+    continue;	
+  }
   if (i < 2){
   if (lowerMove !== -1 && lowerMove !== -2) { // Skip if the number is -1
     if (!result[lowerMove]) {
@@ -1389,6 +1384,9 @@ else{
 
 // Process uppercase pieces
 for (let i = 0; i < moves[1].length; i++) {
+  if (i == -1){
+    continue;	
+  }
   let upperMove = moves[1][i];
   if (i < 2){
   if (upperMove !== -1 && upperMove !== -2) { // Skip if the number is -1
@@ -1432,17 +1430,21 @@ else{
     shouldEnable = false;
 }
         console.log(`${id}: ${result[id]}`);
-        document.getElementById(id.toString()).innerHTML = lookupTable[result[id]];
+        if (id != -1){
+          document.getElementById(id.toString()).innerHTML = lookupTable[result[id]];
+        }
       }
       shouldEnable ? enableConfirmButton() : disableConfirmButton();
       !isFirstMove ? attachListeners() : null;
     }
     
 
-      clearSelections = function(){
-        for (i = 0; i < 35; i++){
-          document.getElementById(i.toString()).style = "";
-        }
+      var clearSelections = function(){
+        console.log("clearing selectionsA");
+        document.querySelectorAll(".selected").forEach(element => {
+          console.log("clearing selections");
+          element.classList.remove("selected");
+        });
       }
 
       //ovo radi

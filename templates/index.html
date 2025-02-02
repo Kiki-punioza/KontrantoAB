@@ -22,6 +22,7 @@
 
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
 
         <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
@@ -46,7 +47,7 @@
         </div>
         <div class="footer">
             <p>Ne zadržavaju se nikakva prava.</p>
-        <p>v 0.8.9 AB</p></div>
+        <p>v 1.0.0 AB</p></div>
     
         
         

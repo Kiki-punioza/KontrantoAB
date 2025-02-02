@@ -17,7 +17,11 @@
         <p>Bok, <a href="/user/profile/{{ session['user']}}"!>{{ session['user'] }}</a>!</p>
         <div class="selection">
         <button onclick="location.href='/private'" type="button">Privatno</button>
+        {% if anyAvailable %}
+        <button onclick="location.href='/public'" type="button" style="font-weight: bold;">VS Čovjek</button>
+        {% else %}
         <button onclick="location.href='/public'" type="button">VS Čovjek</button>
+        {% endif %}
         
         <button onclick="location.href='/bot'" type="button">VS Bot</button>
         

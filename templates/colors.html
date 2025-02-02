@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+<title>Kontranto</title>
+<meta name="title" content="Kontranto" />
+<meta name="description" content="Predvidi i budi nepredvidiv." />
+
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://kontranto.com/" />
+<meta property="og:title" content="Kontranto" />
+<meta property="og:description" content="Predvidi i budi nepredvidiv." />
+<meta property="og:image" content="https://kontranto.com/static/wordart.png" />
+
+
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="https://kontranto.com/" />
+<meta property="twitter:title" content="Kontranto" />
+<meta property="twitter:description" content="Predvidi i budi nepredvidiv." />
+<meta property="twitter:image" content="https://kontranto.com/static/wordart.png" />
+
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="{{ url_for('static', filename='themes/' + session.get('theme', 'dark') + '.css') }}">
+
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='favicon.ico') }}">
+        
+        <style>
+            .gameGrid {
+
+display: grid;
+  direction: ltr;
+  grid-template-columns: repeat(4, 80px);
+  grid-template-rows: repeat(1, 80px);
+  gap: 4px;
+  margin: 20px auto;
+  grid-auto-flow: column;
+  
+
+  
+}
+input {
+    width: 40px;
+    height: 40px;
+}
+        </style>
+    </head>
+    <body>
+
+        <div class="centered ">
+            <div class="gameGrid">
+            </div>
+            <div class="blah" style="display: flex; flex-direction: row;"></div>
+        </div>
+        
+    </body>
+
+    <script>
+            open = `<div class="cell">`;
+        close = `</div>`;   
+        gameGrid = document.querySelector('.gameGrid');
+                    let whiteColor = '#ffffff';
+                    let blackColor = '#000000';
+                    let cellColor = '#aaaaaa';
+                    let outlineColor = '#009900';
+
+              
+                    K = `
+        <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+          <circle cx="38" cy="38" r="35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+        </svg>
+          `;
+              T = `
+        <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+          <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+        </svg>
+          `;
+              k = `
+        <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+          <circle cx="38" cy="38" r="35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+        </svg>
+          `;
+            t = `
+        <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+          <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+        </svg>
+          `;
+
+
+    const whitePicker = document.createElement('input');
+    whitePicker.type = 'color';
+    whitePicker.value = whiteColor;
+
+    const blackPicker = document.createElement('input');
+    blackPicker.type = 'color';
+    blackPicker.value = blackColor;
+
+    const cellPicker = document.createElement('input');
+    cellPicker.type = 'color';
+    cellPicker.value =  cellColor;
+
+    const outlinePicker = document.createElement('input');
+    outlinePicker.type = 'color';
+    outlinePicker.value =  outlineColor;
+
+    document.getElementsByClassName("blah")[0].appendChild(whitePicker);
+    document.getElementsByClassName("blah")[0].appendChild(blackPicker);
+    document.getElementsByClassName("blah")[0].appendChild(cellPicker);
+    document.getElementsByClassName("blah")[0].appendChild(outlinePicker);
+    
+
+    const container = document.createElement('div');
+
+    document.getElementsByClassName("blah")[0].appendChild(container);
+
+    function updateColors() {
+        
+        whiteColor = whitePicker.value;
+        blackColor = blackPicker.value;
+        cellColor = cellPicker.value;
+        outlineColor = outlinePicker.value;
+        open = `<div class="cell" style="background-color: ${cellColor}">`;
+        close = `</div>`;   
+        outlined = `<div class="cell" style="background-color: ${cellColor}; box-shadow: 0 0 0 3px ${outlineColor} inset">`;
+
+    K = `
+        <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+          <circle cx="38" cy="38" r="35" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+        </svg>
+          `;
+              T = `
+        <svg height="76" class="piece black" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+          <polygon points="38,3 73,73 3,73" stroke=${whiteColor} stroke-width="3" fill=${blackColor} />
+        </svg>
+          `;
+              k = `
+        <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="circle">
+          <circle cx="38" cy="38" r="35" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+        </svg>
+          `;
+            t = `
+        <svg height="76" class="piece white" width="76" xmlns="http://www.w3.org/2000/svg" id="triangle">
+          <polygon points="38,3 73,73 3,73" stroke=${blackColor} stroke-width="3" fill=${whiteColor} />
+        </svg>
+          `;
+        gameGrid.innerHTML = open + K + close + open + T + close + outlined + k + close + open + t + close;
+    }
+
+    whitePicker.addEventListener('input', updateColors);
+    blackPicker.addEventListener('input', updateColors);
+    cellPicker.addEventListener('input', updateColors);
+    outlinePicker.addEventListener('input', updateColors);
+
+    // Initial call to set the colors correctly on page load
+    updateColors();
+    </script>
+</html>
+
+
+

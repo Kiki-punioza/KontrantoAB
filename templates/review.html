@@ -67,6 +67,7 @@ display: grid;
               <div style="margin-left: 5px; flex:1; display:flex;flex-direction: column;align-items: center;justify-content: center;">
                 <p style="margin: 0" id="whitePlayer">{{ white }}</p>        
                 <p style="margin: 0" id="false">0:00</p>
+            
            </div>
               
       
@@ -91,6 +92,9 @@ display: grid;
             </div>
          <div id="gameGrid"></div>
          <div id="initialPieces" style="display:flex;width:100%;justify-content: center; gap:10px;"></div>
+         <div class="eval" style=" background-color: black; margin-bottom: 10px">
+          <div class="whitebar" style="background-color: white; width:10%; color:black;"></div>
+         </div>
          </div>
          <div style="display: flex;flex-direction: row;gap: 11px;">
 
@@ -111,15 +115,16 @@ integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q
 crossorigin="anonymous">
 </script>
 <script>
-myColor = "{{ session['theme'] if 'theme' in session else 'dark' }}";
-      if (myColor == "dark" || myColor == "light"){
-        whiteColor = "white";
-        blackColor = "black";
-      }
-      else{
-        whiteColor = "pink";
-        blackColor = "#6AABFF";
-      }
+for (let rule of document.styleSheets[0].cssRules){
+        if(rule.selectorText == "div.black"){
+            blackColor = rule.style.backgroundColor;
+        }
+        if(rule.selectorText == "div.white"){
+            whiteColor = rule.style.backgroundColor;
+        }
+  }
+  console.log(whiteColor);
+  console.log(blackColor);
       
 
       const  K  =   `
@@ -257,12 +262,12 @@ myColor = "{{ session['theme'] if 'theme' in session else 'dark' }}";
 
     `
     function formatTime(seconds) {
-        //console.log(seconds);
+        //
       const minutes = Math.floor(seconds / 60);
       const remainingSeconds = seconds % 60;
       //ovo je NaN
       //molim lijepo popravi
-      //console.log(`${minutes}:${remainingSeconds}`);
+      //
 
       return `${String(minutes).padStart(1, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 }
@@ -285,21 +290,33 @@ lookupTable = {
 
 }
 currentMove = 1;
+document.getElementsByClassName("eval")[0].style.backgroundColor = blackColor;
+document.getElementsByClassName("whitebar")[0].style.backgroundColor = whiteColor;
 
 
 moves = {{ moves | tojson | safe }};
-console.log(moves);
+
 times = {{ times | tojson | safe }}; 
-console.log(times);
+
 whiteSpaces = {{ whiteSpaces | tojson | safe }};
-console.log(whiteSpaces);
+
 blackSpaces = {{ blackSpaces | tojson | safe }};
-console.log(blackSpaces);
+
+evals = {{ evals | tojson | safe }};
+
+maxRight = Math.max(...evals);
+maxLeft = Math.min(...evals);
+
 whiteTime = document.getElementById("false");
 blackTime = document.getElementById("true");
 setToMove = function(move){
-    console.log("SAD IDE")
-    console.log(whiteSpaces[move-1]);
+    score = evals[move-1];
+    score = (score - maxLeft) / (maxRight - maxLeft);
+    document.getElementsByClassName("whitebar")[0].style.width = score * 100 + "%";
+    document.getElementsByClassName("whitebar")[0].style.transition = "width 0.5s ease";
+    document.getElementsByClassName("whitebar")[0].innerHTML = "<span>"+Math.round(score * 36) + "</span>";
+     //round to 1 decimal place
+    
     if(whiteSpaces[move-1] === undefined){
         return false;
     }
@@ -334,20 +351,28 @@ setToMove = function(move){
         }
         
     }
-    console.log(`PIECES JE pieces`);
-    console.log(pieces);
+    
+    
     //for every piece in pieces, set the innerHTML of the corresponding cell to the piece
     white = [];
     black = [];
     wTime = 0;
     bTime = 0;
-
+    
     for (let i = 0; i < move; i++){
+      
+      thing = times[i][0];
+      if (times[i][0].length > 1){
+        thing = times[i][0][0];
+      }
+
         if (times[i][0]){
+          
             //round first to seconds from ms
-            wTime += Math.round(times[i][0]/1000);
+            wTime += Math.round(thing/1000);
         }
         if (times[i][1]){
+          
             bTime += Math.round(times[i][1]/1000);
         }
         
@@ -364,14 +389,15 @@ setToMove = function(move){
             });
         }
     }
-    if (isNaN(wTime)) {
-      wTime = bTime;
+    
+    
+    if (isNaN(wTime) || wTime == 0) {
+      wTime = 0;
     }
-    if (isNaN(bTime)) {
-      bTime = wTime;
+    if (isNaN(bTime) || bTime == 0) {
+      bTime = 0;
     }
-    console.log(`WTIME JE ${wTime} Ž`);
-    console.log(`BTIME JE ${bTime} Ž`);
+
     whiteTime.innerHTML = formatTime(wTime);
     blackTime.innerHTML = formatTime(bTime);
 
@@ -386,9 +412,9 @@ setToMove = function(move){
     document.getElementById("scoreboard").innerHTML = white.length + " - " + black.length;
     for (let i = 0; i < 35; i++){
         if (pieces[i]){
-            console.log(pieces[i]);
+            
             lookupElement = pieces[i];
-            console.log(`${lookupElement} JE TAJ`);
+            
             document.getElementById(i).innerHTML = lookupTable[lookupElement];
         }
         else{

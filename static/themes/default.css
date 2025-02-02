@@ -1,0 +1,18 @@
+.games-card{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    padding-left: 10px;
+    width: min(100vw, 450px);
+    max-width: none;
+    align-items: center;
+
+
+    box-sizing: border-box;
+}
+
+.games-card > * {
+    display: flex;                /* Enable flex on each item */
+    align-items: center;     
+}
